@@ -2,11 +2,35 @@
 
 def changedEggFiles = [] as LinkedList<String>
 def eggConfigs = [] as LinkedList<Map>
+def PELICAN_USER_ID = 0
 
 pipeline {
     agent any
 
+    parameters { 
+        string(name: 'PELICAN_BASE_URL', defaultValue: 'https://pelican.nussi.net/api/application', description: '')
+        string(name: 'PELICAN_USER', defaultValue: '', description: '')
+        password(name: 'PELICAN_TOKEN', defaultValue: '', description: 'Enter a password')
+    }
+
     stages {
+        stage('Resolve pelican user') {
+            steps {
+                script {
+                    if (params.PELICAN_USER?.trim()?.length() == 0) {
+                        error 'PELICAN_USER parameter is required'
+                    }
+                    if (params.PELICAN_TOKEN?.trim()?.length() == 0) {
+                        error 'PELICAN_TOKEN parameter is required'
+                    }
+
+                    def response = httpRequest url: "${params.PELICAN_BASE_URL}/users", acceptType: 'APPLICATION_JSON', httpMode: 'GET'
+
+                    echo response
+                }
+            }
+        }
+
         stage('Detect egg changes') {
             steps {
                 script {

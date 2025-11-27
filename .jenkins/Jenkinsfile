@@ -10,29 +10,39 @@ pipeline {
                     def targetBranch = env.CHANGE_TARGET ?: 'main'
                     echo "Comparing changes against branch: origin/${targetBranch}"
 
-                    sh "git show-ref"
+                    sh 'git show-ref'
 
                     def eggsConfig = readJSON file: '.jenkins/eggs.json'
 
-                    def changedEggFiles = []
+                    ArrayList<String> changedEggFiles = new ArrayList<String>()
 
-                    for (eggConfig in eggsConfig['eggs']) {
+                    def eggConfigs = eggsConfig['eggs'] ?: []
+
+                    for (eggConfig in eggConfigs) {
                         echo "Found egg configuration: ${eggConfig}"
 
-                        def currentChangedEggFiles = sh(
-                            script: "git diff --name-only origin/${targetBranch} -- ${eggConfig['path']}", 
+                        String currentChangedEggDiffs = sh(
+                            script: "git diff --name-only origin/${targetBranch} -- ${eggConfig['path']}",
                             returnStdout: true
                         )
                         .trim()
-                        .split('\n')
-                        .findAll { file ->file.endsWith('.json') && fileExists(file) }
+
+                        if (!currentChangedEggDiffs) {
+                            echo "No changes detected in egg path: ${eggConfig['path']}"
+                            continue
+                        }
+
+                        List<String> currentChangedEggFiles = currentChangedEggDiffs
+                            .split('\n')
+                            .findAll { file -> file.endsWith('.json') && fileExists(file) }
+
+                        echo "Detected ${currentChangedEggFiles.size()} changed egg files in path: ${eggConfig['path']}"
 
                         changedEggFiles.addAll(currentChangedEggFiles)
                     }
 
-
                     for (changedEggFile in changedEggFiles) {
-                        echo "Detected changed egg file: ${changedEggFile}"
+                        echo "Changed egg file: ${changedEggFile}"
                     }
 
                     /*

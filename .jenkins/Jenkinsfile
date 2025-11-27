@@ -20,7 +20,7 @@ pipeline {
                         echo "Found egg configuration: ${eggConfig}"
 
                         def currentChangedEggFiles = sh(
-                            script: "git diff --name-only ${targetBranch} -- ${eggConfig['path']}", 
+                            script: "git diff --name-only origin/${targetBranch} -- ${eggConfig['path']}", 
                             returnStdout: true
                         )
                         .trim()

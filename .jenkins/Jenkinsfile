@@ -10,7 +10,7 @@ pipeline {
                     def targetBranch = env.CHANGE_TARGET ?: 'main'
                     echo "Comparing changes against branch: origin/${targetBranch}"
 
-                    sh "git fetch origin"
+                    sh "git fetch origin ${targetBranch}"
 
                     def eggsConfig = readJSON file: '.jenkins/eggs.json'
 
@@ -20,7 +20,7 @@ pipeline {
                         echo "Found egg configuration: ${eggConfig}"
 
                         def currentChangedEggFiles = sh(
-                            script: "git diff --name-only origin/${targetBranch} -- ${eggConfig['path']}", 
+                            script: "git diff --name-only ${targetBranch} -- ${eggConfig['path']}", 
                             returnStdout: true
                         )
                         .trim()

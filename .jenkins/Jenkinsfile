@@ -30,7 +30,7 @@ pipeline {
                         if (currentChangedEggDiffs.isEmpty() == false) {
                             def currentChangedEggFiles = currentChangedEggDiffs
                                 .split('\n')
-                                .filter { file -> file.endsWith('.json') }
+                                .findAll { file -> file.endsWith('.json') }
                                 //.findAll { file -> file.endsWith('.json') && fileExists(file) }
 
                             echo "Detected ${currentChangedEggFiles.size()} changed egg files in path: ${eggConfig['path']}"

@@ -14,11 +14,11 @@ pipeline {
 
                     def eggsConfig = readJSON file: '.jenkins/eggs.json'
 
-                    ArrayList<String> changedEggFiles = new ArrayList<String>()
+                    def changedEggFiles = []
 
                     def eggConfigs = eggsConfig['eggs'] ?: []
 
-                    for (eggConfig in eggConfigs) {
+                    eggConfigs.each { eggConfig ->
                         echo "Found egg configuration: ${eggConfig}"
 
                         String currentChangedEggDiffs = sh(
@@ -27,21 +27,20 @@ pipeline {
                         )
                         .trim()
 
-                        if (!currentChangedEggDiffs) {
+                        if (currentChangedEggDiffs) {
+                            def currentChangedEggFiles = currentChangedEggDiffs
+                                .split('\n')
+                                .findAll { file -> file.endsWith('.json') && fileExists(file) }
+
+                            echo "Detected ${currentChangedEggFiles.size()} changed egg files in path: ${eggConfig['path']}"
+
+                            changedEggFiles += currentChangedEggFiles
+                        } else {
                             echo "No changes detected in egg path: ${eggConfig['path']}"
-                            continue
                         }
-
-                        List<String> currentChangedEggFiles = currentChangedEggDiffs
-                            .split('\n')
-                            .findAll { file -> file.endsWith('.json') && fileExists(file) }
-
-                        echo "Detected ${currentChangedEggFiles.size()} changed egg files in path: ${eggConfig['path']}"
-
-                        changedEggFiles.addAll(currentChangedEggFiles)
                     }
 
-                    for (changedEggFile in changedEggFiles) {
+                    changedEggFiles.each { changedEggFile ->
                         echo "Changed egg file: ${changedEggFile}"
                     }
 

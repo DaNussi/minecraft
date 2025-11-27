@@ -1,5 +1,8 @@
 /* groovylint-disable CompileStatic, NestedBlockDepth, VariableTypeRequired */
 
+def changedEggFiles = [] as LinkedList<String>
+def eggConfigs = [] as LinkedList<Map>
+
 pipeline {
     agent any
 
@@ -14,9 +17,8 @@ pipeline {
 
                     def eggsConfig = readJSON file: '.jenkins/eggs.json'
 
-                    def changedEggFiles = [] as LinkedList<String>
-
-                    def eggConfigs = eggsConfig['eggs'] ?: [] as LinkedList<Map>
+                    changedEggFiles = []
+                    eggConfigs += eggsConfig['eggs']
 
                     eggConfigs.each { eggConfig ->
                         echo "Found egg configuration: ${eggConfig}"
@@ -26,7 +28,7 @@ pipeline {
                             returnStdout: true
                         )
                         .trim()
-                        
+
                         if (currentChangedEggDiffs.isEmpty() == false) {
                             def currentChangedEggFiles = currentChangedEggDiffs
                                 .split('\n')
@@ -45,28 +47,26 @@ pipeline {
                     changedEggFiles.each { changedEggFile ->
                         echo changedEggFile
                     }
+                }
+            }
+        }
 
-                    def parallelStages = [:]
-                    for (int pi = 0; pi < changedEggFiles.size(); pi++) {
-                        def fileToProcess = changedEggFiles[pi]
-                        // create a closure that will be executed in parallel
-                        parallelStages["Process ${fileToProcess}"] = {
-                            node {
-                                stage("Process ${fileToProcess}") {
-                                    echo "Processing egg file: ${fileToProcess}"
-                                }
-                            }
+        script {
+            def parallelStages = [:]
+            for (int pi = 0; pi < changedEggFiles.size(); pi++) {
+                def fileToProcess = changedEggFiles[pi]
+                // create a closure that will be executed in parallel
+                parallelStages["Process ${fileToProcess}"] = {
+                    node {
+                        stage("Process ${fileToProcess}") {
+                            echo "Processing egg file: ${fileToProcess}"
                         }
                     }
-
-                    if (parallelStages.size() > 0) {
-                        parallel parallelStages
-                    }
-
-                    /*
-                    def parallelStages = [:]
-                    */
                 }
+            }
+
+            if (parallelStages.size() > 0) {
+                parallel parallelStages
             }
         }
     }

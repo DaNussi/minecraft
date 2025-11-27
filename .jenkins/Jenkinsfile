@@ -41,8 +41,20 @@ pipeline {
                         }
                     }
 
+                    echo 'Changed egg file:'
                     changedEggFiles.each { changedEggFile ->
-                        echo "Changed egg file: ${changedEggFile}"
+                        echo changedEggFile
+                    }
+
+                    changedEggFiles.each { changedEggFile ->
+                        parallel {
+                            stage("Process ${changedEggFile}") {
+                                // Add processing steps here
+                                script {
+                                    echo "Processing egg file: ${changedEggFile}"
+                                }
+                            }
+                        }
                     }
 
                     /*

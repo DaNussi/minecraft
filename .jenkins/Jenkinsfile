@@ -26,12 +26,11 @@ pipeline {
                             returnStdout: true
                         )
                         .trim()
-                        echo "Current changed egg diffs:\n${currentChangedEggDiffs}"
-
                         
                         if (currentChangedEggDiffs.isEmpty() == false) {
                             def currentChangedEggFiles = currentChangedEggDiffs
                                 .split('\n')
+                                .filter { file -> file.endsWith('.json') }
                                 //.findAll { file -> file.endsWith('.json') && fileExists(file) }
 
                             echo "Detected ${currentChangedEggFiles.size()} changed egg files in path: ${eggConfig['path']}"
@@ -42,8 +41,8 @@ pipeline {
                         }
                     }
 
-                    for (int ci = 0; ci < changedEggFiles.size(); ci++) {
-                        echo "Changed egg file: ${changedEggFiles[ci]}"
+                    changedEggFiles.each { changedEggFile ->
+                        echo "Changed egg file: ${changedEggFile}"
                     }
 
                     /*

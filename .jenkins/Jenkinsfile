@@ -18,7 +18,8 @@ pipeline {
 
                     def eggConfigs = eggsConfig['eggs'] ?: []
 
-                    eggConfigs.each { eggConfig ->
+                    for (int ei = 0; ei < eggConfigs.size(); ei++) {
+                        def eggConfig = eggConfigs[ei]
                         echo "Found egg configuration: ${eggConfig}"
 
                         String currentChangedEggDiffs = sh(
@@ -40,26 +41,11 @@ pipeline {
                         }
                     }
 
-                    changedEggFiles.each { changedEggFile ->
-                        echo "Changed egg file: ${changedEggFile}"
+                    for (int ci = 0; ci < changedEggFiles.size(); ci++) {
+                        echo "Changed egg file: ${changedEggFiles[ci]}"
                     }
 
                     /*
-
-                    def changeLog = sh(
-                        script: "git diff --name-only origin/${targetBranch}...HEAD",
-                        returnStdout: true
-                    ).trim()
-
-                    def jsonFiles = changeLog.split('\n').findAll { file ->
-                        file.endsWith('.json') && fileExists(file)
-                    }
-
-                    if (!jsonFiles) {
-                        echo "No JSON files to test."
-                        return // Exit if nothing to do
-                    }
-
                     def parallelStages = [:]
                     */
                 }

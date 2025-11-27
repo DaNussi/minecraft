@@ -51,22 +51,29 @@ pipeline {
             }
         }
 
-        script {
-            def parallelStages = [:]
-            for (int pi = 0; pi < changedEggFiles.size(); pi++) {
-                def fileToProcess = changedEggFiles[pi]
-                // create a closure that will be executed in parallel
-                parallelStages["Process ${fileToProcess}"] = {
-                    node {
-                        stage("Process ${fileToProcess}") {
-                            echo "Processing egg file: ${fileToProcess}"
+        stage('Process changed egg files') {
+            when {
+                expression { return changedEggFiles.size() > 0 }
+            }
+            steps {
+                script {
+                    def parallelStages = [:]
+                    for (int pi = 0; pi < changedEggFiles.size(); pi++) {
+                        def fileToProcess = changedEggFiles[pi]
+                        // create a closure that will be executed in parallel
+                        parallelStages["Process ${fileToProcess}"] = {
+                            node {
+                                stage("Process ${fileToProcess}") {
+                                    echo "Processing egg file: ${fileToProcess}"
+                                }
+                            }
                         }
                     }
-                }
-            }
 
-            if (parallelStages.size() > 0) {
-                parallel parallelStages
+                    if (parallelStages.size() > 0) {
+                        parallel parallelStages
+                    }
+                }
             }
         }
     }

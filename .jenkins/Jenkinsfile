@@ -46,15 +46,21 @@ pipeline {
                         echo changedEggFile
                     }
 
-                    changedEggFiles.each { changedEggFile ->
-                        parallel {
-                            stage("Process ${changedEggFile}") {
-                                // Add processing steps here
-                                script {
-                                    echo "Processing egg file: ${changedEggFile}"
+                    def parallelStages = [:]
+                    for (int pi = 0; pi < changedEggFiles.size(); pi++) {
+                        def fileToProcess = changedEggFiles[pi]
+                        // create a closure that will be executed in parallel
+                        parallelStages["Process ${fileToProcess}"] = {
+                            node {
+                                stage("Process ${fileToProcess}") {
+                                    echo "Processing egg file: ${fileToProcess}"
                                 }
                             }
                         }
+                    }
+
+                    if (parallelStages.size() > 0) {
+                        parallel parallelStages
                     }
 
                     /*

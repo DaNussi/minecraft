@@ -18,7 +18,7 @@ pipeline {
 
                     def eggsConfig = readJSON file: '.jenkins/eggs.json'
 
-                    for (def eggConfig : eggsConfig['eggs']) {
+                    for (eggConfig in eggsConfig['eggs']) {
                         echo "Found egg configuration: ${eggConfig}"
                     }
 

@@ -8,25 +8,9 @@ pipeline {
             steps {
                 script {
                     def targetBranch = env.CHANGE_TARGET ?: 'main'
-                    echo "Comparing changes against branch: origin/${targetBranch} (resolving ref)"
+                    echo "Comparing changes against branch: origin/${targetBranch}"
 
-                    // Try fetching the specific branch; fall back to a full fetch if needed,
-                    // then pick a usable ref (prefer origin/<branch> if present).
-                    def baseRef = sh(script: '''
-                            set -e
-                            if git fetch origin ${targetBranch}; then
-                                :
-                            else
-                                git fetch origin || true
-                            fi
-                            if git rev-parse --verify --quiet origin/${targetBranch} >/dev/null; then
-                                echo origin/${targetBranch}
-                            else
-                                echo ${targetBranch}
-                            fi
-                    ''', returnStdout: true).trim()
-
-                    echo "Resolved base ref: ${baseRef}"
+                    sh "git fetch origin ${targetBranch} --refetch"
 
                     def eggsConfig = readJSON file: '.jenkins/eggs.json'
 
@@ -36,7 +20,7 @@ pipeline {
                         echo "Found egg configuration: ${eggConfig}"
 
                         def currentChangedEggFiles = sh(
-                            script: "git diff --name-only ${baseRef} -- ${eggConfig['path']}", 
+                            script: "git diff --name-only ${targetBranch} -- ${eggConfig['path']}", 
                             returnStdout: true
                         )
                         .trim()

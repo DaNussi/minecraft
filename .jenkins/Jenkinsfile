@@ -1,9 +1,5 @@
 /* groovylint-disable CompileStatic, NestedBlockDepth, VariableTypeRequired */
 
-assertPluginsInstalled(requiredPlugins: [
-  'pipeline-utility-steps': ''
-])
-
 pipeline {
     agent any
 

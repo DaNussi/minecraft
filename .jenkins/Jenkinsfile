@@ -1,4 +1,8 @@
-/* groovylint-disable NestedBlockDepth */
+/* groovylint-disable CompileStatic, NestedBlockDepth, VariableTypeRequired */
+
+assertPluginsInstalled(requiredPlugins: [
+  'pipeline-utility-steps': ''
+])
 
 pipeline {
     agent any
@@ -12,21 +16,20 @@ pipeline {
 
                     sh "git fetch origin ${targetBranch}"
 
-                    def eggs_config = readJSON file: '.jenkins/eggs.json'
+                    def eggsConfig = readJSON file: '.jenkins/eggs.json'
 
-                    for (def egg_config : eggs_config['eggs']) {
-                        echo "Found egg configuration: ${egg_config}"
-
+                    for (def eggConfig : eggsConfig['eggs']) {
+                        echo "Found egg configuration: ${eggConfig}"
                     }
 
                     /*
-                    
+
                     def changeLog = sh(
                         script: "git diff --name-only origin/${targetBranch}...HEAD",
                         returnStdout: true
                     ).trim()
 
-                    def jsonFiles = changeLog.split('\n').findAll { file -> 
+                    def jsonFiles = changeLog.split('\n').findAll { file ->
                         file.endsWith('.json') && fileExists(file)
                     }
 

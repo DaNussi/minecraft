@@ -1,0 +1,44 @@
+/* groovylint-disable NestedBlockDepth */
+
+@CompileDynamic
+pipeline {
+    agent any
+
+    stages {
+        stage('Detect egg changes') {
+            steps {
+                script {
+                    def targetBranch = env.CHANGE_TARGET ?: 'main'
+                    echo "Comparing changes against branch: origin/${targetBranch}"
+
+                    sh "git fetch origin ${targetBranch}"
+
+                    def eggs_config = readJSON file: '.jenkins/eggs.json'
+
+                    for (def egg_config : eggs_config['eggs']) {
+                        echo "Found egg configuration: ${egg_config}"
+
+                    }
+
+                    /*
+                    def changeLog = sh(
+                        script: "git diff --name-only origin/${targetBranch}...HEAD",
+                        returnStdout: true
+                    ).trim()
+
+                    def jsonFiles = changeLog.split('\n').findAll { file -> 
+                        file.endsWith('.json') && fileExists(file)
+                    }
+
+                    if (!jsonFiles) {
+                        echo "No JSON files to test."
+                        return // Exit if nothing to do
+                    }
+
+                    def parallelStages = [:]
+                    */
+                }
+            }
+        }
+    }
+}

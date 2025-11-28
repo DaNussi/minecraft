@@ -42,15 +42,17 @@ pipeline {
                     if(response.startsWith('2')) {
                         echo 'Successfully retrieved pelican users'
                         def usersJson = readJSON file: '.jenkins/user-request.json'
-                        def pelicanUsers = usersJson['data'].collect ( userJson -> {
-                            return [
-                                'id'       : userJson['attributes']['id'],
-                                'username' : userJson['attributes']['username'],
-                                'email'    : userJson['attributes']['email']
+                        def pelicanUsers = usersJson['data'].collect { userJson ->
+                            [
+                                id: userJson['attributes']['id'],
+                                username: userJson['attributes']['username'],
+                                email: userJson['attributes']['email']
                             ]
-                        })
+                        }
 
                         echo "Found ${pelicanUsers.size()} users"
+
+                        echo "Users: ${pelicanUsers}"
 
                     } else {
                         error "Failed to retrieve pelican users, response code: ${response}"

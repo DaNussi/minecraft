@@ -2,14 +2,16 @@
 
 def changedEggFiles = [] as LinkedList<String>
 def eggConfigs = [] as LinkedList<Map>
-def PELICAN_USER_ID = ''
+
+// store the resolved pelican user object (id/username/email) for downstream stages
+def PELICAN_USER = [:]
 
 pipeline {
     agent any
 
     environment {
         PELICAN_BASE_URL = credentials('jenkins-pelican-base-url')
-        PELICAN_USER    = credentials('jenkins-pelican-user')
+        PELICAN_USER_EMAIL    = credentials('jenkins-pelican-user')
         PELICAN_TOKEN = credentials('jenkins-pelican-token')
     }
 
@@ -20,8 +22,8 @@ pipeline {
                     if (PELICAN_BASE_URL?.trim()?.length() == 0) {
                         error 'PELICAN_BASE_URL parameter is required'
                     }
-                    if (PELICAN_USER?.trim()?.length() == 0) {
-                        error 'PELICAN_USER parameter is required'
+                    if (PELICAN_USER_EMAIL?.trim()?.length() == 0) {
+                        error 'PELICAN_USER_EMAIL parameter is required'
                     }
                     if (PELICAN_TOKEN?.trim()?.length() == 0) {
                         error 'PELICAN_TOKEN parameter is required'
@@ -53,28 +55,25 @@ pipeline {
                         echo "Found ${pelicanUsers.size()} users"
 
                         // Match by email (case-insensitive), fall back to username if not found.
-                        def target = PELICAN_USER?.trim()?.toLowerCase()
+                        def target = PELICAN_USER_EMAIL?.trim()?.toLowerCase()
                         def matchedUsers = pelicanUsers.findAll { u ->
                             (u.email ?: '').toLowerCase() == target
                         }
 
                         if (matchedUsers.size() == 1) {
                             def pelicanUser = matchedUsers[0]
-                            // store globally for later stages
-                            PELICAN_USER_ID = pelicanUser.id
-                            echo "Resolved Pelican user id: ${PELICAN_USER_ID} for user: ${pelicanUser.username} (${pelicanUser.email})"
+                            PELICAN_USER = pelicanUser
+                            echo "Resolved Pelican user id: ${pelicanUser.id} for user: ${pelicanUser.username} (${pelicanUser.email})"
                         } else if (matchedUsers.size() > 1) {
-                            error "Multiple Pelican users matched '${PELICAN_USER}'. Please ensure the PELICAN_USER email is unique."
+                            error "Multiple Pelican users matched. Please ensure the PELICAN_USER_EMAIL is correct and unique."
                         } else {
-                            error "No Pelican user matched '${PELICAN_USER}'. Please ensure PELICAN_USER credential contains the user's email (or username)."
+                            error "No Pelican user matched. Please ensure PELICAN_USER_EMAIL exists in the pelican panel."
                         }
 
 
                     } else {
                         error "Failed to retrieve pelican users, response code: ${response}"
                     }
-
-                    echo response
                 }
             }
         }

@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     def response = sh(
-                        script: 'curl -s -o .jenkins/user-request.json -w "%{http_code}\n" -X GET -H "Accept: application/json" -H "Authorization: Bearer $(PELICAN_TOKEN)" -- $(PELICAN_BASE_URL)/users',
+                        script: 'curl -s -o .jenkins/user-request.json -w "%{http_code}\n" -X GET -H "Accept: application/json" -H "Authorization: Bearer $PELICAN_TOKEN" -- $PELICAN_BASE_URL/users',
                         returnStdout: true
                     ).trim()
 

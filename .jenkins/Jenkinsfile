@@ -34,7 +34,11 @@ pipeline {
         stage('Resolve pelican user id') {
             steps {
                 script {
-                    def response = httpRequest url: "${params.PELICAN_BASE_URL}/users", acceptType: 'APPLICATION_JSON', httpMode: 'GET'
+                    def response = sh(
+                        script: "curl -s -o .jenkins/user-request.json -w '%{http_code}\n' -X GET -H 'Accept: application/json' -H 'Authorization: Bearer ${PELICAN_TOKEN}' -- ${PELICAN_BASE_URL}/users",
+                        returnStdout: true
+                    ).trim()
+
                     echo response
                 }
             }

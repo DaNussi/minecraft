@@ -7,25 +7,34 @@ def PELICAN_USER_ID = 0
 pipeline {
     agent any
 
-    parameters { 
-        string(name: 'PELICAN_BASE_URL', defaultValue: 'https://pelican.nussi.net/api/application', description: '')
-        string(name: 'PELICAN_USER', defaultValue: '', description: '')
-        password(name: 'PELICAN_TOKEN', defaultValue: '', description: 'Enter a password')
+    environment {
+        PELICAN_BASE_URL = credentials('jenkins-pelican-base-url')
+        PELICAN_USER    = credentials('jenkins-pelican-user')
+        PELICAN_TOKEN = credentials('jenkins-pelican-token')
     }
 
     stages {
-        stage('Resolve pelican user') {
+        stage('Validate environment variables') {
             steps {
                 script {
-                    if (params.PELICAN_USER?.trim()?.length() == 0) {
+                    if (PELICAN_BASE_URL?.trim()?.length() == 0) {
+                        error 'PELICAN_BASE_URL parameter is required'
+                    }
+                    if (PELICAN_USER?.trim()?.length() == 0) {
                         error 'PELICAN_USER parameter is required'
                     }
-                    if (params.PELICAN_TOKEN?.trim()?.length() == 0) {
+                    if (PELICAN_TOKEN?.trim()?.length() == 0) {
                         error 'PELICAN_TOKEN parameter is required'
+
                     }
+                }
+            }
+        }
 
+        stage('Resolve pelican user id') {
+            steps {
+                script {
                     def response = httpRequest url: "${params.PELICAN_BASE_URL}/users", acceptType: 'APPLICATION_JSON', httpMode: 'GET'
-
                     echo response
                 }
             }

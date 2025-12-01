@@ -249,7 +249,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
 
                     def response = sh(
                             script: """
-                                curl -s -X POST-o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" -- "${env.PELICAN_BASE_URL}/servers  --data '${serverJson}'"
+                                curl -s -X POST -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" --data '${serverJson}' -- "${env.PELICAN_BASE_URL}/servers"
                             """,
                             returnStdout: true
                     ).trim()

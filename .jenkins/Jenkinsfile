@@ -159,7 +159,7 @@ def hatchEgg(def hatchFile) {
                 echo "Importing egg file into the pelican panel: ${eggFile}"
                 script {
                     catchError(message : "Failed to import egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
-                        def response = httpRequest url: "${env.PELICAN_BASE_URL}/eggs/import?format=json",
+                        def response = httpRequest url: "${env.PELICAN_BASE_URL}/eggs/import?format=json".toString(),
                                 acceptType: 'APPLICATION_JSON',
                                 contentType: 'APPLICATION_JSON',
                                 httpMode: 'POST',
@@ -179,11 +179,12 @@ def hatchEgg(def hatchFile) {
                 echo "Deleting egg ${egg['uuid']} '${eggFile}'"
                 script {
                     catchError(message : "Failed to delete egg ${egg['uuid']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'NOT_BUILT', catchInterruptions: false) {
-                        httpRequest url: "${env.PELICAN_BASE_URL}/eggs/${egg['uuid']}/uuid",
+                        httpRequest url: "${env.PELICAN_BASE_URL}/eggs/${egg['uuid']}/uuid".toString(),
                                 acceptType: 'APPLICATION_JSON',
                                 contentType: 'APPLICATION_JSON',
                                 httpMode: 'DELETE',
                                 validResponseCodes: '200:299',
+                                consoleLogResponseBody: true,
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
                         echo "Successfully deleted egg ${eggFile}"
                     }

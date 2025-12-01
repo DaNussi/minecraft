@@ -193,8 +193,8 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
 
                     def egg = readJSON file: eggFile
 
-                    String serverJson = JsonOutput.toJson(
-                    [
+                    String serverJson = """
+                    {
                       "external_id": "${eggUUID}",
                       "name": "Jenkins CI/CD - ${eggUUID}",
                       "description": "${env.BUILD_URL}",
@@ -206,20 +206,20 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
                       "skip_scripts": false,
                       "oom_killer": false,
                       "start_on_completion": true,
-                      "limits": [
+                      "limits": {
                         "memory": 10240,
                         "disk": 10240,
                         "swap": -1,
                         "io": 1000,
                         "cpu": 800
-                      ],
-                      "feature_limits": [
+                      },
+                      "feature_limits": {
                         "databases": 0,
                         "allocations": 0,
                         "backups": 0
-                      ],
+                      },
                       "allocation": {},
-                      "deploy": [
+                      "deploy": {
                         "locations": [],
                         "tags": [
                           "jenkins"
@@ -241,20 +241,24 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
                             "25660","25661","25662","25663","25664",
                             "25665","25666","25667","25668","25669"
                         ]
-                      ]
-                    ])
+                      }
+                    }
+                    """.stripIndent().toString()
 
-                    def server_file = eggFile.replace('.json', '.server.json')
-
-                    writeJSON file: server_file, json: serverJson
-                    echo "Created server create request data ${server_file}"
+                    //def server_file = eggFile.replace('.json', '.server.json')
+                    //writeJSON file: server_file, json: serverJson
+                    //echo "Created server create request data ${server_file}"
 
                     def response_file = eggFile.replace('.json', '.create.json')
 
+                    def request = """
+                                curl -s -X POST -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" --data '${serverJson}' -- "${env.PELICAN_BASE_URL}/servers"'
+                        """.toString()
+
+                    echo request
+
                     def response = sh(
-                            script: """
-                                curl -s -X POST -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" --data '@${server_file} -- "${env.PELICAN_BASE_URL}/servers"'
-                            """,
+                            script: request,
                             returnStdout: true
                     ).trim()
 

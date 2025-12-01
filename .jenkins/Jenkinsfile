@@ -251,7 +251,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
                     def response_file = eggFile.replace('.json', '.create.json')
 
                     def request = """
-                                curl -s -X POST -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" --data '@${server_file}' -- "${env.PELICAN_BASE_URL}/servers"
+                                curl -s -X POST -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" --data @${server_file} -- "${env.PELICAN_BASE_URL}/servers"
                         """.toString()
 
                     def response = sh(

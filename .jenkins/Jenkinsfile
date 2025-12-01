@@ -142,18 +142,18 @@ def hatchEgg(def hatchFile) {
                 }
             }
 
-//            stage("Mark egg") {
-//                script {
-//                    catchError(message : "Failed to save egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
-//                        String gitUUID = env.GIT_COMMIT as String
-//                        String fileUUID = eggFile
-//                        egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
-//                        writeJSON(file: eggFile, json: egg)
-//                        echo "Set egg '${eggFile}' uuid to ${egg['uuid']}"
-//                        echo writeJSON(json: egg, returnText: true, pretty: 4) as String
-//                    }
-//                }
-//            }
+            stage("Mark egg") {
+                script {
+                    catchError(message : "Failed to save egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
+                        String gitUUID = env.GIT_COMMIT as String
+                        String fileUUID = eggFile
+                        egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
+                        writeJSON(file: eggFile, json: egg, pretty: 4)
+                        echo "Set egg '${eggFile}' uuid to ${egg['uuid']}"
+                        echo writeJSON(json: egg, returnText: true, pretty: 4) as String
+                    }
+                }
+            }
 
             stage("Importing egg") {
                 echo "Importing egg file into the pelican panel: ${eggFile}"

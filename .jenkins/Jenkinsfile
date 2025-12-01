@@ -202,8 +202,6 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
                       "description": "${env.BUILD_URL}",
                       "user": ${PELICAN_USER.id},
                       "egg": ${eggIds[eggFile]},
-                      "docker_image": "${egg['docker_images'][0] as String}",
-                      "startup": "${(egg['startup'] as String).translateEscapes()}",
                       "environment": [],
                       "skip_scripts": false,
                       "oom_killer": false,
@@ -245,7 +243,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
                         ]
                       }
                     }
-                    /$.stripIndent().toString()
+                    /$
 
                     //def server_file = eggFile.replace('.json', '.server.json')
                     //writeJSON file: server_file, json: serverJson

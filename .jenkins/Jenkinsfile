@@ -160,7 +160,7 @@ def testEgg(String eggFile) {
 
                     writeJSON file: eggFile, json: eggJson
 
-                    echo "Set Egg $PELICAN_EGG_NAME uuid to ${eggUUID}"
+                    echo "Set Egg ${env.PELICAN_EGG_NAME} uuid to ${eggUUID}"
                 }
             }
 

@@ -144,7 +144,7 @@ def testEgg(String eggFile) {
 
             stage("Updating Egg UUID ${eggFile}") {
                 environment {
-                    PELICAN_EGG_FILE = eggFile
+                    PELICAN_EGG_FILE = "${env.WORKSPACE}/${eggFile}"
                     PELICAN_EGG_NAME = new File(eggFile).name
                     PELICAN_EGG_IMPORT_REQUEST_FILE = eggFile.replace('.json', '.import.json')
                 }
@@ -166,7 +166,7 @@ def testEgg(String eggFile) {
 
             stage("Import Egg ${eggFile}") {
                 environment {
-                    PELICAN_EGG_FILE = eggFile
+                    PELICAN_EGG_FILE = "${env.WORKSPACE}/${eggFile}"
                     PELICAN_EGG_NAME = new File(eggFile).name
                     PELICAN_EGG_IMPORT_REQUEST_FILE = eggFile.replace('.json', '.import.json')
                 }
@@ -175,15 +175,17 @@ def testEgg(String eggFile) {
                     echo "Importing egg file: ${eggFile}"
 
                     def response = sh(
-                            script: "curl -s -X POST --data '@${env.PELICAN_EGG_FILE}' -o ${env.PELICAN_EGG_IMPORT_REQUEST_FILE} -w '%{http_code}\n' -H 'Accept: application/json' -H 'Authorization: Bearer ${env.PELICAN_TOKEN}' -- ${env.PELICAN_BASE_URL}/eggs/import",
+                            script: """
+                                curl -s -X POST --data-binary "@${env.PELICAN_EGG_FILE}" -o "${env.PELICAN_EGG_IMPORT_REQUEST_FILE}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" -- "${env.PELICAN_BASE_URL}/eggs/import"
+                            """,
                             returnStdout: true
                     ).trim()
 
                     if(response.startsWith('2')) {
-                        echo 'Successfully imported egg $PELICAN_EGG_NAME'
+                        echo "Successfully imported egg ${env.PELICAN_EGG_NAME}"
 
                     } else {
-                        error "Failed to import egg ${PELICAN_EGG_NAME}, response code: ${response}"
+                        error "Failed to import egg ${env.PELICAN_EGG_NAME}, response code: ${response}"
                     }
                 }
             }

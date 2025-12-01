@@ -130,8 +130,8 @@ pipeline {
                         String eggFile = changedEggFiles[pi]
                         eggTestingStages["Testing Egg ${eggFile}"] = testEgg(eggFile)
                     }
+                    parallel eggTestingStages
                 }
-                parallel eggTestingStages
             }
         }
     }

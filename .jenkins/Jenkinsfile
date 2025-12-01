@@ -1,9 +1,8 @@
 /* groovylint-disable CompileStatic, NestedBlockDepth, VariableTypeRequired */
 
 
-def config = [:]
-
-
+List<String> hatchFiles = []
+def hatchStages = [:]
 
 pipeline {
     agent any
@@ -35,12 +34,20 @@ pipeline {
         stage('Scan for configs') {
             steps {
                 script {
-                    def hatchFiles = findFiles(glob: "**/*.hatch.json")
+                    hatchFiles = findFiles(glob: "**/*.hatch.json")
 
-                    for (def hatchFile : hatchFiles) {
-                        echo(hatchFile.toString())
+
+                }
+            }
+        }
+
+        stage('Hatching Egg\'s') {
+            steps {
+                script {
+                    for (String hatchFile : hatchFiles) {
+                        hatchStages["Hatching Egg ${hatchFile}"] = hatchEgg(hatchFile)
                     }
-
+                    parallel hatchStages
                 }
             }
         }
@@ -101,6 +108,45 @@ pipeline {
 //                }
 //            }
 //        }
+    }
+}
+
+
+def hatchEgg(String hatchFile) {
+    String eggFile = hatchFile.replace('.hatch.json', '.json')
+    def hatch = [:]
+    def egg = [:]
+
+    return {
+        stage("Hatching Egg ${hatchFile}") {
+
+            stage("Checking hatch file") {
+                steps {
+                    echo "Checking if hatch file '${hatchFile}' exists and is valid..."
+                    script {
+                        catchError(message : 'Hatch file failed validation', buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
+                            if(!fileExists(hatchFile)) error("Hatch file was not be found '${hatchFile}'")
+                            hatch = readJSON(file: hatchFile)
+                        }
+                    }
+                    echo "Hatch file '${hatchFile}' exsists and is valid!"
+                }
+            }
+
+            stage("Checking egg file") {
+                steps {
+                    echo "Checking if egg file '${eggFile}' exists and is valid..."
+                    script {
+
+                        catchError(message : 'Egg file failed validation', buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
+                            if(!fileExists(eggFile)) error("Found egg file but no egg: ${eggFile}")
+                            egg = readJSON(file: eggFile)
+                        }
+                    }
+                    echo "Hatch file '${eggFile}' exsists and is valid!"
+                }
+            }
+        }
     }
 }
 

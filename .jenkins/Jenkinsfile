@@ -122,7 +122,7 @@ def hatchEgg(def hatchFile) {
             stage("Checking hatch file") {
                 echo "Checking if hatch file '${hatchFile}' exists and is valid..."
                 script {
-                    catchError(message : 'Hatch file failed validation', buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
+                    catchError(message : "Hatch file failed validation ${hatchFile}".toString(), buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
                         if(!fileExists(hatchFile)) error("Hatch file was not found '${hatchFile}'")
                         hatch = readJSON(file: hatchFile)
                     }
@@ -134,7 +134,7 @@ def hatchEgg(def hatchFile) {
                 echo "Checking if egg file '${eggFile}' exists and is valid..."
                 script {
 
-                    catchError(message : 'Egg file failed validation', buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
+                    catchError(message : "Egg file failed validation ${eggFile}".toString(), buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
                         if(!fileExists(eggFile)) error("Found egg file but no egg: ${eggFile}")
                         egg = readJSON(file: eggFile)
                     }
@@ -142,21 +142,27 @@ def hatchEgg(def hatchFile) {
                 echo "Egg file '${eggFile}' exsists and is valid!"
             }
 
-            stage("Importing egg") {
+            stage("Mark egg") {
                 script {
-                    String gitUUID = env.GIT_COMMIT as String
-                    String fileUUID = eggFile
-                    egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
+                    catchError(message : "Failed to save egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
+                        String gitUUID = env.GIT_COMMIT as String
+                        String fileUUID = eggFile
+                        egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
+                        writeJSON(file: eggFile, json: egg)
+                    }
                 }
                 echo "Set egg '${eggFile}' uuid to ${egg['uuid']}"
+            }
+
+            stage("Importing egg") {
                 echo "Importing egg file into the pelican panel: ${eggFile}"
                 script {
-                    catchError(message : 'Failed to import egg ${eggFile}', buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
+                    catchError(message : "Failed to import egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
                         def response = httpRequest url: "${env.PELICAN_BASE_URL}/eggs/import",
                                 acceptType: 'APPLICATION_JSON',
                                 contentType: 'APPLICATION_JSON',
                                 httpMode: 'POST',
-                                requestBody: writeJSON(json: egg, returnText: true, pretty: 4),
+                                requestBody: eggFile,
                                 validResponseCodes: '200:299',
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
                         def body = readJSON file: response.content

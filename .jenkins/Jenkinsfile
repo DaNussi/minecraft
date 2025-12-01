@@ -160,7 +160,7 @@ def testEgg(String eggFile) {
 
                     writeJSON file: eggFile, json: eggJson
 
-                    echo "Set Egg uuid to ${eggUUID}"
+                    echo "Set Egg ${env.PELICAN_EGG_FILE} uuid to ${eggUUID}"
                 }
             }
 
@@ -175,7 +175,7 @@ def testEgg(String eggFile) {
                     echo "Importing egg file: ${eggFile}"
 
                     def response = sh(
-                            script: 'curl -s -X POST --data "@$PELICAN_EGG_FILE" -o $PELICAN_EGG_IMPORT_REQUEST_FILE -w "%{http_code}\n" -H "Accept: application/json" -H "Authorization: Bearer $PELICAN_TOKEN" -- $PELICAN_BASE_URL/users',
+                            script: "curl -s -X POST --data '@${env.PELICAN_EGG_FILE}' -o ${env.PELICAN_EGG_IMPORT_REQUEST_FILE} -w '%{http_code}\n' -H 'Accept: application/json' -H 'Authorization: Bearer ${env.PELICAN_TOKEN}' -- ${env.PELICAN_BASE_URL}/eggs/import",
                             returnStdout: true
                     ).trim()
 

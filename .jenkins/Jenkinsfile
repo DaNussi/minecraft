@@ -1,5 +1,4 @@
 /* groovylint-disable CompileStatic, NestedBlockDepth, VariableTypeRequired */
-import groovy.json.JsonOutput
 
 def hatchFileDescriptions = []
 def hatchStages = [:]
@@ -157,7 +156,7 @@ def hatchEgg(def hatchFile) {
                                 acceptType: 'APPLICATION_JSON',
                                 contentType: 'APPLICATION_JSON',
                                 httpMode: 'POST',
-                                requestBody: JsonOutput.toJson(egg),
+                                requestBody: writeJSON(json: egg, returnText: true, pretty: 4),
                                 validResponseCodes: '200:299',
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
                         def body = readJSON file: response.content
@@ -171,7 +170,7 @@ def hatchEgg(def hatchFile) {
             stage("Deleting egg") {
                 echo "Deleting egg ${egg['uuid']} '${eggFile}'"
                 script {
-                    catchError(message : "Failed to delete egg ${egg['uuid']} ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
+                    catchError(message : "Failed to delete egg ${egg['uuid']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'NOT_BUILT', catchInterruptions: false) {
                         httpRequest url: "${env.PELICAN_BASE_URL}/eggs/${egg['uuid']}/uuid",
                                 acceptType: 'APPLICATION_JSON',
                                 contentType: 'APPLICATION_JSON',

@@ -195,7 +195,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
 
                     String.inp
 
-                    def serverJson = $/
+                    def serverJson = """
                     {
                       "external_id": "${eggUUID}",
                       "name": "Jenkins CI/CD - ${eggUUID}",
@@ -242,8 +242,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
                             "25665","25666","25667","25668","25669"
                         ]
                       }
-                    }
-                    /$
+                    }""".stripIndent().toString()
 
                     //def server_file = eggFile.replace('.json', '.server.json')
                     //writeJSON file: server_file, json: serverJson

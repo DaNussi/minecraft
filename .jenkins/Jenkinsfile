@@ -197,7 +197,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
                     {
                       "external_id": "${eggUUID}",
                       "name": "Jenkins CI/CD - ${eggUUID}",
-                      "description": "${env.BUILD_TAG}",
+                      "description": "${env.BUILD_NUMBER}",
                       "user": ${userId},
                       "egg": ${eggIds[eggFile]},
                       "environment": [],

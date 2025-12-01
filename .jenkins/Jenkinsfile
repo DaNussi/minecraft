@@ -130,7 +130,7 @@ pipeline {
                 script {
                     for (int pi = 0; pi < changedEggFiles.size(); pi++) {
                         String eggFile = changedEggFiles[pi]
-                        eggTestingStages["Testing Egg ${eggFile}"] = testEgg(eggFile)
+                        eggTestingStages["Testing Egg ${eggFile}"] = testEgg(eggFile, eggIds)
                         break //for testing only
                     }
                     parallel eggTestingStages
@@ -141,7 +141,7 @@ pipeline {
 }
 
 
-def testEgg(String eggFile) {
+def testEgg(String eggFile, Map<String, Integer> eggIds) {
     return {
         stage("Testing Egg ${eggFile}") {
 

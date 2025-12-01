@@ -245,7 +245,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
                     echo serverJson
 
                     def server_file = eggFile.replace('.json', '.server.json')
-                    writeJSON file: server_file, json: serverJson
+                    writeFile file: server_file, text: serverJson, encoding: "UTF-8"
                     echo "Created server create request data ${server_file}"
 
                     def response_file = eggFile.replace('.json', '.create.json')

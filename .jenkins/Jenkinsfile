@@ -1,7 +1,7 @@
 /* groovylint-disable CompileStatic, NestedBlockDepth, VariableTypeRequired */
 
 
-List<String> hatchFiles = []
+def hatchFileDescriptions = []
 def hatchStages = [:]
 
 pipeline {
@@ -34,9 +34,7 @@ pipeline {
         stage('Scan for configs') {
             steps {
                 script {
-                    hatchFiles = findFiles(glob: "**/*.hatch.json")
-
-
+                    hatchFileDescriptions = findFiles(glob: "**/*.hatch.json")
                 }
             }
         }
@@ -44,7 +42,8 @@ pipeline {
         stage('Hatching Egg\'s') {
             steps {
                 script {
-                    for (String hatchFile : hatchFiles) {
+                    for (def hatchFileDescription : hatchFileDescriptions) {
+                        def hatchFile = hatchFileDescription.name
                         hatchStages["Hatching Egg ${hatchFile}"] = hatchEgg(hatchFile)
                     }
                     parallel hatchStages

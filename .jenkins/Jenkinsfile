@@ -116,34 +116,73 @@ def hatchEgg(def hatchFile) {
     def hatch = [:]
     def egg = [:]
 
+
     return {
         stage("Hatching Egg ${hatchFile}") {
 
-            parallel {
-
-                stage("Checking hatch file") {
-                    echo "Checking if hatch file '${hatchFile}' exists and is valid..."
-                    script {
-                        catchError(message : 'Hatch file failed validation', buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
-                            if(!fileExists(hatchFile)) error("Hatch file was not found '${hatchFile}'")
-                            hatch = readJSON(file: hatchFile)
-                        }
+            stage("Checking hatch file") {
+                echo "Checking if hatch file '${hatchFile}' exists and is valid..."
+                script {
+                    catchError(message : 'Hatch file failed validation', buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
+                        if(!fileExists(hatchFile)) error("Hatch file was not found '${hatchFile}'")
+                        hatch = readJSON(file: hatchFile)
                     }
-                    echo "Hatch file '${hatchFile}' exsists and is valid!"
                 }
-
-                stage("Checking egg file") {
-                    echo "Checking if egg file '${eggFile}' exists and is valid..."
-                    script {
-
-                        catchError(message : 'Egg file failed validation', buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
-                            if(!fileExists(eggFile)) error("Found egg file but no egg: ${eggFile}")
-                            egg = readJSON(file: eggFile)
-                        }
-                    }
-                    echo "Egg file '${eggFile}' exsists and is valid!"
-                }
+                echo "Hatch file '${hatchFile}' exsists and is valid!"
             }
+
+            stage("Checking egg file") {
+                echo "Checking if egg file '${eggFile}' exists and is valid..."
+                script {
+
+                    catchError(message : 'Egg file failed validation', buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
+                        if(!fileExists(eggFile)) error("Found egg file but no egg: ${eggFile}")
+                        egg = readJSON(file: eggFile)
+                    }
+                }
+                echo "Egg file '${eggFile}' exsists and is valid!"
+            }
+
+            stage("Importing egg") {
+                script {
+                    String gitUUID = env.GIT_COMMIT as String
+                    String fileUUID = eggFile
+                    egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
+                }
+                echo "Set egg '${eggFile}' uuid to ${egg['uuid']}"
+                echo "Importing egg file into the pelican panel: ${eggFile}"
+                script {
+                    catchError(message : 'Failed to import egg ${eggFile}', buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
+                        def response = httpRequest url: "${env.PELICAN_BASE_URL}/eggs/import",
+                                acceptType: 'APPLICATION_JSON',
+                                contentType: 'APPLICATION_JSON',
+                                httpMode: 'POST',
+                                requestBody: JsonOutput.toJson(egg),
+                                validResponseCodes: '200:299',
+                                customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+                        def body = readJSON file: response.content
+                        egg['id'] = body['attributes']['id'] as int
+                    }
+                }
+                echo "Successfully imported egg '${eggFile}' into the pelican panel with id: ${egg['id']}"
+            }
+
+
+            stage("Deleting egg") {
+                echo "Deleting egg ${egg['uuid']} '${eggFile}'"
+                script {
+                    catchError(message : "Failed to delete egg ${egg['uuid']} ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
+                        httpRequest url: "${env.PELICAN_BASE_URL}/eggs/${egg['uuid']}/uuid",
+                                acceptType: 'APPLICATION_JSON',
+                                contentType: 'APPLICATION_JSON',
+                                httpMode: 'DELETE',
+                                validResponseCodes: '200:299',
+                                customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+                    }
+                }
+                echo "Successfully deleted egg ${eggFile}"
+            }
+
         }
     }
 }

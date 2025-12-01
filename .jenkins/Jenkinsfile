@@ -101,7 +101,7 @@ pipeline {
                         )
                         .trim()
 
-                        if (currentChangedEggDiffs.isEmpty() == false) {
+                        if (!currentChangedEggDiffs.isEmpty()) {
                             def currentChangedEggFiles = currentChangedEggDiffs
                                 .split('\n')
                                 .findAll { file -> file.endsWith('.json') }

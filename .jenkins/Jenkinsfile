@@ -193,15 +193,17 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
 
                     def egg = readJSON file: eggFile
 
-                    String serverJson = """
+                    String.inp
+
+                    def serverJson = $/
                     {
                       "external_id": "${eggUUID}",
                       "name": "Jenkins CI/CD - ${eggUUID}",
                       "description": "${env.BUILD_URL}",
                       "user": ${PELICAN_USER.id},
                       "egg": ${eggIds[eggFile]},
-                      "docker_image": "${egg['docker_images'][0]}",
-                      "startup": "${egg['startup']}",
+                      "docker_image": "${egg['docker_images'][0] as String}",
+                      "startup": "${(egg['startup'] as String).translateEscapes()}",
                       "environment": [],
                       "skip_scripts": false,
                       "oom_killer": false,
@@ -243,7 +245,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
                         ]
                       }
                     }
-                    """.stripIndent().toString()
+                    /$.stripIndent().toString()
 
                     //def server_file = eggFile.replace('.json', '.server.json')
                     //writeJSON file: server_file, json: serverJson

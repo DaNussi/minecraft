@@ -123,58 +123,68 @@ pipeline {
         }
 
         stage('Testing egg\'s'){
-            parallel {
-                for (int pi = 0; pi < changedEggFiles.size(); pi++) {
-                    String eggFile = changedEggFiles[pi]
-                    stage("Testing Egg ${eggFile}") {
-                        environment {
-                            PELICAN_EGG_FILE = eggFile
-                            PELICAN_EGG_NAME = new File(eggFile).name
-                            PELICAN_EGG_IMPORT_REQUEST_FILE = eggFile.replace('.json', '.import.json')
-                        }
-
-                        stage("Updating Egg UUID ${eggFile}") {
-
-                            script {
-                                def eggJson = readJSON file: eggFile
-
-                                def gitUUID = env.GIT_COMMIT as String
-                                def eggUUID = UUID.fromString(
-                                        gitUUID.replaceFirst(
-                                                "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
-                                                '$1-$2-$3-$4-$5'
-                                        )
-                                ).toString()
-
-                                eggJson['uuid'] = eggUUID
-
-                                writeJSON {
-                                    file: eggFile
-                                    json: eggJson
-                                }
-
-                                echo "Set Egg $PELICAN_EGG_NAME uuid to ${eggUUID}"
-                            }
-                        }
-
-                        stage("Import Egg ${eggFile}") {
-
-                        script {
-                            echo "Importing egg file: ${eggFile}"
-
-                            def response = sh(
-                                    script: 'curl -s -X POST --data "@$PELICAN_EGG_FILE" -o $PELICAN_EGG_IMPORT_REQUEST_FILE -w "%{http_code}\n" -H "Accept: application/json" -H "Authorization: Bearer $PELICAN_TOKEN" -- $PELICAN_BASE_URL/users',
-                                    returnStdout: true
-                            ).trim()
-
-                            if(response.startsWith('2')) {
-                                echo 'Successfully imported egg $PELICAN_EGG_NAME'
-
-                            } else {
-                                error "Failed to import egg ${PELICAN_EGG_NAME}, response code: ${response}"
-                            }
-                        }
+            steps {
+                def eggTestingStages = [:]
+                script {
+                    for (int pi = 0; pi < changedEggFiles.size(); pi++) {
+                        String eggFile = changedEggFiles[pi]
+                        eggTestingStages["Testing Egg ${eggFile}"] = testEgg(eggFile)
                     }
+                }
+                parallel eggTestingStages
+            }
+        }
+    }
+}
+
+
+def testEgg(String eggFile) {
+    return {
+        stage("Testing Egg ${eggFile}") {
+            environment {
+                PELICAN_EGG_FILE = eggFile
+                PELICAN_EGG_NAME = new File(eggFile).name
+                PELICAN_EGG_IMPORT_REQUEST_FILE = eggFile.replace('.json', '.import.json')
+            }
+
+            stage("Updating Egg UUID ${eggFile}") {
+
+                script {
+                    def eggJson = readJSON file: eggFile
+
+                    def gitUUID = env.GIT_COMMIT as String
+                    def eggUUID = UUID.fromString(
+                            gitUUID.replaceFirst(
+                                    "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
+                                    '$1-$2-$3-$4-$5'
+                            )
+                    ).toString()
+
+                    eggJson['uuid'] = eggUUID
+
+                    writeJSON {
+                        file: eggFile
+                        json: eggJson
+                    }
+
+                    echo "Set Egg $PELICAN_EGG_NAME uuid to ${eggUUID}"
+                }
+            }
+
+            stage("Import Egg ${eggFile}") {
+                script {
+                    echo "Importing egg file: ${eggFile}"
+
+                    def response = sh(
+                            script: 'curl -s -X POST --data "@$PELICAN_EGG_FILE" -o $PELICAN_EGG_IMPORT_REQUEST_FILE -w "%{http_code}\n" -H "Accept: application/json" -H "Authorization: Bearer $PELICAN_TOKEN" -- $PELICAN_BASE_URL/users',
+                            returnStdout: true
+                    ).trim()
+
+                    if(response.startsWith('2')) {
+                        echo 'Successfully imported egg $PELICAN_EGG_NAME'
+
+                    } else {
+                        error "Failed to import egg ${PELICAN_EGG_NAME}, response code: ${response}"
                     }
                 }
             }

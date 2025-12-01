@@ -164,6 +164,7 @@ def hatchEgg(def hatchFile) {
                                 httpMode: 'POST',
                                 requestBody: eggFile,
                                 validResponseCodes: '200:299',
+                                consoleLogResponseBody: true,
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
                         def body = readJSON file: response.content
                         egg['id'] = body['attributes']['id'] as int

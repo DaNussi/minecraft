@@ -254,8 +254,6 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
                                 curl -s -X POST -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" --data '@${server_file}' -- "${env.PELICAN_BASE_URL}/servers"
                         """.toString()
 
-                    echo request
-
                     def response = sh(
                             script: request,
                             returnStdout: true
@@ -268,6 +266,11 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
                         echo "Successfully created server ${serverId} ${eggFile}"
 
                     } else {
+                        def responseText = readFile file: response_file
+
+                        echo "Failed to create server ${eggFile}, response code: ${response}"
+                        echo "Failure Response:\n${responseText}"
+
                         error "Failed to create server ${eggFile}, response code: ${response}"
                     }
 

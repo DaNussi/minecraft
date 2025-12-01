@@ -150,6 +150,7 @@ def hatchEgg(def hatchFile) {
                         egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
                         writeJSON(file: eggFile, json: egg)
                         echo "Set egg '${eggFile}' uuid to ${egg['uuid']}"
+                        echo writeJSON(json: egg, returnText: true, pretty: 4) as String
                     }
                 }
             }

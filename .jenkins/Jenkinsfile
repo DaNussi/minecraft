@@ -44,7 +44,7 @@ pipeline {
         stage('Hatching Egg\'s') {
             steps {
                 script {
-                    for (def hatchFile : hatchFiles) {
+                    for (String hatchFile : hatchFiles) {
                         hatchStages["Hatching Egg ${hatchFile}"] = hatchEgg(hatchFile)
                     }
                     parallel hatchStages
@@ -112,8 +112,8 @@ pipeline {
 }
 
 
-def hatchEgg(String hatchFile) {
-    String eggFile = hatchFile.replace('.hatch.json', '.json')
+def hatchEgg(def hatchFile) {
+    def eggFile = hatchFile.replace('.hatch.json', '.json')
     def hatch = [:]
     def egg = [:]
 

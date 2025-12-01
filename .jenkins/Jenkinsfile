@@ -179,6 +179,32 @@ def testEgg(String eggFile) {
                     }
                 }
             }
+
+            stage("Delete Egg ${eggFile}") {
+                script {
+                    echo "Deleting egg: ${eggFile}"
+
+                    def response_file = eggFile.replace('.json', '.delete.json')
+
+                    def gitUUID = env.GIT_COMMIT as String
+                    def fileUUID = eggFile
+                    def eggUUID = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
+
+                    def response = sh(
+                            script: """
+                                curl -s -X DELETE -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" -- "${env.PELICAN_BASE_URL}/eggs/${eggUUID}/uuid"
+                            """,
+                            returnStdout: true
+                    ).trim()
+
+                    if(response.startsWith('2')) {
+                        echo "Successfully deleted egg ${eggFile}"
+
+                    } else {
+                        error "Failed to delete egg ${eggFile} with uuid ${eggUUID}, response code: ${response}"
+                    }
+                }
+            }
         }
     }
 }

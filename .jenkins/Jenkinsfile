@@ -142,7 +142,7 @@ def testEgg(String eggFile) {
     return {
         stage("Testing Egg ${eggFile}") {
 
-            stage("Updating Egg UUID ${eggFile}") {
+            stage("Updating UUID") {
                 script {
                     def eggJson = readJSON file: eggFile
 
@@ -158,7 +158,7 @@ def testEgg(String eggFile) {
                 }
             }
 
-            stage("Import Egg ${eggFile}") {
+            stage("Importing") {
                 script {
                     echo "Importing egg file: ${eggFile}"
 
@@ -180,7 +180,7 @@ def testEgg(String eggFile) {
                 }
             }
 
-            stage("Delete Egg ${eggFile}") {
+            stage("Deleting") {
                 script {
                     echo "Deleting egg: ${eggFile}"
 

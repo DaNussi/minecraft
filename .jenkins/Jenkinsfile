@@ -242,6 +242,8 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
                       }
                     }""".stripIndent().toString()
 
+                    echo serverJson
+
                     def server_file = eggFile.replace('.json', '.server.json')
                     writeJSON file: server_file, json: serverJson
                     echo "Created server create request data ${server_file}"

@@ -251,7 +251,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
                             contentType: 'APPLICATION_JSON',
                             httpMode: 'POST',
                             requestBody: serverJson,
-                            validResponseCodes: '500:599',
+                            validResponseCodes: '0:499',
                             customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
 
                     if(response.status.startsWith('2')) {

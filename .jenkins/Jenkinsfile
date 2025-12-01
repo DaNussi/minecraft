@@ -193,8 +193,6 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
 
                     def egg = readJSON file: eggFile
 
-                    String.inp
-
                     def serverJson = """
                     {
                       "external_id": "${eggUUID}",

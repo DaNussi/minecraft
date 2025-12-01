@@ -244,33 +244,23 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
 
                     echo serverJson
 
-                    //String server_file = eggFile.replace('.json', '.server.json')
-                    //writeFile file: server_file, text: serverJson
-                    //echo "Created server create request data ${server_file}"
 
-                    //def f = sh "cat ${server_file}"
-                    //echo f
 
-                    def response_file = eggFile.replace('.json', '.create.json')
+                    def response = httpRequest url: "${env.PELICAN_BASE_URL}/servers",
+                            acceptType: 'APPLICATION_JSON',
+                            contentType: 'APPLICATION_JSON',
+                            httpMode: 'POST',
+                            requestBody: serverJson,
+                            customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
 
-                    def request = """
-                                curl -s -X POST --data '${serverJson}'  -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" -- "${env.PELICAN_BASE_URL}/servers"
-                        """.toString()
-                    echo request
-
-                    def response = sh(
-                            script: request,
-                            returnStdout: true
-                    ).trim()
-
-                    if(response.startsWith('2')) {
-                        def responseJson = readJSON file: response_file
+                    if(response.status.startsWith('2')) {
+                        def responseJson = readJSON text: response.content
                         def serverId = responseJson['attributes']['id']
 
                         echo "Successfully created server ${serverId} ${eggFile}"
 
                     } else {
-                        def responseText = readFile file: response_file
+                        def responseText = response.content
 
                         echo "Failed to create server ${eggFile}, response code: ${response}"
                         echo "Failure Response:\n${responseText}"

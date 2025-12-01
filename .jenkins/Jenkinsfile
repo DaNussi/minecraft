@@ -141,13 +141,13 @@ pipeline {
 def testEgg(String eggFile) {
     return {
         stage("Testing Egg ${eggFile}") {
-            environment {
-                PELICAN_EGG_FILE = eggFile
-                PELICAN_EGG_NAME = new File(eggFile).name
-                PELICAN_EGG_IMPORT_REQUEST_FILE = eggFile.replace('.json', '.import.json')
-            }
 
             stage("Updating Egg UUID ${eggFile}") {
+                environment {
+                    PELICAN_EGG_FILE = eggFile
+                    PELICAN_EGG_NAME = new File(eggFile).name
+                    PELICAN_EGG_IMPORT_REQUEST_FILE = eggFile.replace('.json', '.import.json')
+                }
 
                 script {
                     def eggJson = readJSON file: eggFile
@@ -160,11 +160,17 @@ def testEgg(String eggFile) {
 
                     writeJSON file: eggFile, json: eggJson
 
-                    echo "Set Egg ${env.PELICAN_EGG_NAME} uuid to ${eggUUID}"
+                    echo "Set Egg uuid to ${eggUUID}"
                 }
             }
 
             stage("Import Egg ${eggFile}") {
+                environment {
+                    PELICAN_EGG_FILE = eggFile
+                    PELICAN_EGG_NAME = new File(eggFile).name
+                    PELICAN_EGG_IMPORT_REQUEST_FILE = eggFile.replace('.json', '.import.json')
+                }
+
                 script {
                     echo "Importing egg file: ${eggFile}"
 

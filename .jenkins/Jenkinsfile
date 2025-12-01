@@ -124,7 +124,8 @@ pipeline {
 
         stage('Testing egg\'s'){
             parallel {
-                for (String eggFile : changedEggFiles) {
+                for (int pi = 0; pi < changedEggFiles.size(); pi++) {
+                    String eggFile = changedEggFiles[pi]
                     stage("Testing Egg ${eggFile}") {
                         environment {
                             PELICAN_EGG_FILE = eggFile

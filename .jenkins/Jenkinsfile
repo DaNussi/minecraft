@@ -1,6 +1,6 @@
 /* groovylint-disable CompileStatic, NestedBlockDepth, VariableTypeRequired */
 
-def changedEggFiles = [] as LinkedList<String>
+LinkedList<String> changedEggFiles = [] as LinkedList<String>
 def eggConfigs = [] as LinkedList<Map>
 
 // store the resolved pelican user object (id/username/email) for downstream stages
@@ -130,12 +130,56 @@ pipeline {
                 script {
                     def parallelStages = [:]
                     for (int pi = 0; pi < changedEggFiles.size(); pi++) {
-                        def fileToProcess = changedEggFiles[pi]
+                        String fileToProcess = changedEggFiles[pi]
                         // create a closure that will be executed in parallel
                         parallelStages["Process ${fileToProcess}"] = {
                             node {
-                                stage("Process ${fileToProcess}") {
-                                    echo "Processing egg file: ${fileToProcess}"
+                                environment {
+                                    PELICAN_EGG_FILE = fileToProcess
+                                    PELICAN_EGG_NAME = new File(fileToProcess).name
+                                    PELICAN_EGG_IMPORT_REQUEST_FILE = fileToProcess.replace('.json', '.import.json')
+                                }
+
+                                stage("Updating Egg UUID ${fileToProcess}") {
+                                    script {
+                                        def eggJson = readJSON file: fileToProcess
+
+                                        def gitUUID = env.GIT_COMMIT as String
+                                        def eggUUID = UUID.fromString(
+                                                gitUUID.replaceFirst(
+                                                        "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
+                                                        '$1-$2-$3-$4-$5'
+                                                )
+                                        ).toString()
+
+                                        eggJson['uuid'] = eggUUID
+
+                                        writeJSON {
+                                            file: fileToProcess
+                                            json: eggJson
+                                        }
+
+                                        echo "Set Egg $PELICAN_EGG_NAME uuid to ${eggUUID}"
+                                    }
+                                }
+
+                                stage("Import Egg ${fileToProcess}") {
+
+                                    script {
+                                        echo "Importing egg file: ${fileToProcess}"
+
+                                        def response = sh(
+                                                script: 'curl -s -X POST --data "@$PELICAN_EGG_FILE" -o $PELICAN_EGG_IMPORT_REQUEST_FILE -w "%{http_code}\n" -H "Accept: application/json" -H "Authorization: Bearer $PELICAN_TOKEN" -- $PELICAN_BASE_URL/users',
+                                                returnStdout: true
+                                        ).trim()
+
+                                        if(response.startsWith('2')) {
+                                            echo 'Successfully imported egg $PELICAN_EGG_NAME'
+
+                                        } else {
+                                            error "Failed to import egg ${PELICAN_EGG_NAME}, response code: ${response}"
+                                        }
+                                    }
                                 }
                             }
                         }

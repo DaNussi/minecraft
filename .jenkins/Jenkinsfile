@@ -150,7 +150,6 @@ def hatchEgg(def hatchFile) {
                         egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
                         writeJSON(file: eggFile, json: egg, pretty: 4)
                         echo "Set egg '${eggFile}' uuid to ${egg['uuid']}"
-                        echo writeJSON(json: egg, returnText: true, pretty: 4) as String
                     }
                 }
             }
@@ -165,9 +164,9 @@ def hatchEgg(def hatchFile) {
                                 httpMode: 'POST',
                                 requestBody: (writeJSON(json: egg, returnText: true, pretty: 4) as String),
                                 validResponseCodes: '200:299',
-                                consoleLogResponseBody: true,
+                                consoleLogResponseBody: false,
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
-                        def body = readJSON file: response.content
+                        def body = readJSON text: response.content
                         egg['id'] = body['attributes']['id'] as int
                         echo "Successfully imported egg '${eggFile}' into the pelican panel with id: ${egg['id']}"
                     }
@@ -184,7 +183,7 @@ def hatchEgg(def hatchFile) {
                                 contentType: 'APPLICATION_JSON',
                                 httpMode: 'DELETE',
                                 validResponseCodes: '200:299',
-                                consoleLogResponseBody: true,
+                                consoleLogResponseBody: false,
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
                         echo "Successfully deleted egg ${eggFile}"
                     }

@@ -1,20 +1,16 @@
 /* groovylint-disable CompileStatic, NestedBlockDepth, VariableTypeRequired */
 
-LinkedList<String> changedEggFiles = [] as LinkedList<String>
-def eggConfigs = [] as LinkedList<Map>
-def eggTestingStages = [:]
 
-Map<String, Integer> eggIds = [:]
+def config = [:]
 
-// store the resolved pelican user object (id/username/email) for downstream stages
-def PELICAN_USER = [:]
+
 
 pipeline {
     agent any
 
     environment {
         PELICAN_BASE_URL = credentials('jenkins-pelican-base-url')
-        PELICAN_USER_EMAIL    = credentials('jenkins-pelican-user')
+        PELICAN_USER_ID = credentials('jenkins-pelican-user-id')
         PELICAN_TOKEN = credentials('jenkins-pelican-token')
     }
 
@@ -25,8 +21,8 @@ pipeline {
                     if (PELICAN_BASE_URL?.trim()?.length() == 0) {
                         error 'PELICAN_BASE_URL parameter is required'
                     }
-                    if (PELICAN_USER_EMAIL?.trim()?.length() == 0) {
-                        error 'PELICAN_USER_EMAIL parameter is required'
+                    if (PELICAN_USER_ID?.trim()?.length() == 0) {
+                        error 'PELICAN_USER_ID parameter is required'
                     }
                     if (PELICAN_TOKEN?.trim()?.length() == 0) {
                         error 'PELICAN_TOKEN parameter is required'
@@ -36,107 +32,75 @@ pipeline {
             }
         }
 
-        stage('Resolve pelican user id') {
+        stage('Scan for configs') {
             steps {
                 script {
-                    def response = sh(
-                        script: 'curl -s -o .jenkins/user-request.json -w "%{http_code}\n" -X GET -H "Accept: application/json" -H "Authorization: Bearer $PELICAN_TOKEN" -- $PELICAN_BASE_URL/users',
-                        returnStdout: true
-                    ).trim()
+                    def hatchFiles = findFiles(glob: "**/*.hatch.json")
 
-                    if(response.startsWith('2')) {
-                        echo 'Successfully retrieved pelican users'
-                        def usersJson = readJSON file: '.jenkins/user-request.json'
-                        def pelicanUsers = usersJson['data'].collect { userJson ->
-                            [
-                                id: userJson['attributes']['id'],
-                                username: userJson['attributes']['username'],
-                                email: userJson['attributes']['email']
-                            ]
-                        }
-
-                        echo "Found ${pelicanUsers.size()} users"
-
-                        // Match by email (case-insensitive), fall back to username if not found.
-                        def target = PELICAN_USER_EMAIL?.trim()?.toLowerCase()
-                        def matchedUsers = pelicanUsers.findAll { u ->
-                            (u.email ?: '').toLowerCase() == target
-                        }
-
-                        if (matchedUsers.size() == 1) {
-                            def pelicanUser = matchedUsers[0]
-                            PELICAN_USER = pelicanUser
-                            echo "Resolved Pelican user id: ${pelicanUser.id} for user: ${pelicanUser.username} (${pelicanUser.email})"
-                        } else if (matchedUsers.size() > 1) {
-                            error "Multiple Pelican users matched. Please ensure the PELICAN_USER_EMAIL is correct and unique."
-                        } else {
-                            error "No Pelican user matched. Please ensure PELICAN_USER_EMAIL exists in the pelican panel."
-                        }
-
-
-                    } else {
-                        error "Failed to retrieve pelican users, response code: ${response}"
+                    for (def hatchFile : hatchFiles) {
+                        echo(hatchFile.toString())
                     }
+
                 }
             }
         }
 
-        stage('Detect egg changes') {
-            steps {
-                script {
-                    def targetBranch = env.CHANGE_TARGET ?: 'main'
-                    echo "Comparing changes against branch: origin/${targetBranch}"
-
-                    sh 'git show-ref'
-
-                    def eggsConfig = readJSON file: '.jenkins/eggs.json'
-
-                    changedEggFiles = []
-                    eggConfigs += eggsConfig['eggs']
-
-                    eggConfigs.each { eggConfig ->
-                        echo "Found egg configuration: ${eggConfig}"
-
-                        String currentChangedEggDiffs = sh(
-                            script: "git diff --name-only origin/${targetBranch} -- ${eggConfig['path']}",
-                            returnStdout: true
-                        )
-                        .trim()
-
-                        if (!currentChangedEggDiffs.isEmpty()) {
-                            def currentChangedEggFiles = currentChangedEggDiffs
-                                .split('\n')
-                                .findAll { file -> file.endsWith('.json') }
-                                //.findAll { file -> file.endsWith('.json') && fileExists(file) }
-
-                            echo "Detected ${currentChangedEggFiles.size()} changed egg files in path: ${eggConfig['path']}"
-
-                            changedEggFiles += currentChangedEggFiles
-                        } else {
-                            echo "No changes detected in egg path: ${eggConfig['path']}"
-                        }
-                    }
-
-                    echo 'Changed egg file:'
-                    changedEggFiles.each { changedEggFile ->
-                        echo changedEggFile
-                    }
-                }
-            }
-        }
-
-        stage('Testing egg\'s'){
-            steps {
-                script {
-                    for (int pi = 0; pi < changedEggFiles.size(); pi++) {
-                        String eggFile = changedEggFiles[pi]
-                        eggTestingStages["Testing Egg ${eggFile}"] = testEgg(eggFile, eggIds, PELICAN_USER.id as Integer)
-                        break //for testing only
-                    }
-                    parallel eggTestingStages
-                }
-            }
-        }
+//        stage('Detect egg changes') {
+//            steps {
+//                script {
+//                    def targetBranch = env.CHANGE_TARGET ?: 'main'
+//                    echo "Comparing changes against branch: origin/${targetBranch}"
+//
+//                    sh 'git show-ref'
+//
+//                    def eggsConfig = readJSON file: '.jenkins/eggs.json'
+//
+//                    changedEggFiles = []
+//                    eggConfigs += eggsConfig['eggs']
+//
+//                    eggConfigs.each { eggConfig ->
+//                        echo "Found egg configuration: ${eggConfig}"
+//
+//                        String currentChangedEggDiffs = sh(
+//                            script: "git diff --name-only origin/${targetBranch} -- ${eggConfig['path']}",
+//                            returnStdout: true
+//                        )
+//                        .trim()
+//
+//                        if (!currentChangedEggDiffs.isEmpty()) {
+//                            def currentChangedEggFiles = currentChangedEggDiffs
+//                                .split('\n')
+//                                .findAll { file -> file.endsWith('.json') }
+//                                //.findAll { file -> file.endsWith('.json') && fileExists(file) }
+//
+//                            echo "Detected ${currentChangedEggFiles.size()} changed egg files in path: ${eggConfig['path']}"
+//
+//                            changedEggFiles += currentChangedEggFiles
+//                        } else {
+//                            echo "No changes detected in egg path: ${eggConfig['path']}"
+//                        }
+//                    }
+//
+//                    echo 'Changed egg file:'
+//                    changedEggFiles.each { changedEggFile ->
+//                        echo changedEggFile
+//                    }
+//                }
+//            }
+//        }
+//
+//        stage('Testing egg\'s'){
+//            steps {
+//                script {
+//                    for (int pi = 0; pi < changedEggFiles.size(); pi++) {
+//                        String eggFile = changedEggFiles[pi]
+//                        eggTestingStages["Testing Egg ${eggFile}"] = testEgg(eggFile, eggIds, PELICAN_USER.id as Integer)
+//                        break //for testing only
+//                    }
+//                    parallel eggTestingStages
+//                }
+//            }
+//        }
     }
 }
 

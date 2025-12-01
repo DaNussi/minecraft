@@ -163,7 +163,7 @@ def hatchEgg(def hatchFile) {
                                 acceptType: 'APPLICATION_JSON',
                                 contentType: 'APPLICATION_JSON',
                                 httpMode: 'POST',
-                                requestBody: eggFile,
+                                requestBody: writeJSON(json: egg, returnText: true, pretty: 4) as String,
                                 validResponseCodes: '200:299',
                                 consoleLogResponseBody: true,
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]

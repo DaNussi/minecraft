@@ -153,12 +153,8 @@ def testEgg(String eggFile) {
                     def eggJson = readJSON file: eggFile
 
                     def gitUUID = env.GIT_COMMIT as String
-                    def eggUUID = UUID.fromString(
-                            gitUUID.replaceFirst(
-                                    "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
-                                    '$1-$2-$3-$4-$5'
-                            )
-                    ).toString()
+                    def fileUUID = eggFile
+                    def eggUUID = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
 
                     eggJson['uuid'] = eggUUID
 

@@ -2,6 +2,7 @@
 
 LinkedList<String> changedEggFiles = [] as LinkedList<String>
 def eggConfigs = [] as LinkedList<Map>
+def eggTestingStages = [:]
 
 // store the resolved pelican user object (id/username/email) for downstream stages
 def PELICAN_USER = [:]
@@ -124,7 +125,6 @@ pipeline {
 
         stage('Testing egg\'s'){
             steps {
-                def eggTestingStages = [:]
                 script {
                     for (int pi = 0; pi < changedEggFiles.size(); pi++) {
                         String eggFile = changedEggFiles[pi]

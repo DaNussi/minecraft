@@ -243,13 +243,13 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
                         ]
                       }
                     }
-                    """.stripIndent().translateEscapes()
+                    """.stripIndent()
 
                     def response_file = eggFile.replace('.json', '.create.json')
 
                     def response = sh(
                             script: """
-                                curl -s -X POST -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" --data '${serverJson}' -- "${env.PELICAN_BASE_URL}/servers"
+                                curl -s -X POST "${env.PELICAN_BASE_URL}/servers" -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" --data '${serverJson}'
                             """,
                             returnStdout: true
                     ).trim()

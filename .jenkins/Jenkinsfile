@@ -240,21 +240,21 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
                             "25665","25666","25667","25668","25669"
                         ]
                       }
-                    }""".stripIndent().toString()
+                    }""".stripIndent().replace('\n', '').replace('\r', '').toString()
 
                     echo serverJson
 
-                    String server_file = eggFile.replace('.json', '.server.json')
-                    writeFile file: server_file, text: serverJson
-                    echo "Created server create request data ${server_file}"
+                    //String server_file = eggFile.replace('.json', '.server.json')
+                    //writeFile file: server_file, text: serverJson
+                    //echo "Created server create request data ${server_file}"
 
-                    def f = sh "cat ${server_file}"
-                    echo f
+                    //def f = sh "cat ${server_file}"
+                    //echo f
 
                     def response_file = eggFile.replace('.json', '.create.json')
 
                     def request = """
-                                curl -s -X POST --data-binary "@${server_file}"  -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" -- "${env.PELICAN_BASE_URL}/servers"
+                                curl -s -X POST --data '${server_file}'  -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" -- "${env.PELICAN_BASE_URL}/servers"
                         """.toString()
                     echo request
 

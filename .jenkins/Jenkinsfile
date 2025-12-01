@@ -130,7 +130,7 @@ pipeline {
                 script {
                     for (int pi = 0; pi < changedEggFiles.size(); pi++) {
                         String eggFile = changedEggFiles[pi]
-                        eggTestingStages["Testing Egg ${eggFile}"] = testEgg(eggFile, eggIds, PELICAN_USER)
+                        eggTestingStages["Testing Egg ${eggFile}"] = testEgg(eggFile, eggIds, PELICAN_USER.id as Integer)
                         break //for testing only
                     }
                     parallel eggTestingStages
@@ -141,7 +141,7 @@ pipeline {
 }
 
 
-def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, Object> PELICAN_USER) {
+def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
     return {
         stage("Testing Egg ${eggFile}") {
 
@@ -200,7 +200,7 @@ def testEgg(String eggFile, Map<String, Integer> eggIds,  LinkedHashMap<Object, 
                       "external_id": "${eggUUID}",
                       "name": "Jenkins CI/CD - ${eggUUID}",
                       "description": "${env.BUILD_URL}",
-                      "user": ${PELICAN_USER.id},
+                      "user": ${userId},
                       "egg": ${eggIds[eggFile]},
                       "environment": [],
                       "skip_scripts": false,

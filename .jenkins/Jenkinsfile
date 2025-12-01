@@ -43,7 +43,7 @@ pipeline {
             steps {
                 script {
                     for (def hatchFileDescription : hatchFileDescriptions) {
-                        def hatchFile = hatchFileDescription.name
+                        def hatchFile = hatchFileDescription.path
                         hatchStages["Hatching Egg ${hatchFile}"] = hatchEgg(hatchFile)
                     }
                     parallel hatchStages
@@ -123,7 +123,7 @@ def hatchEgg(def hatchFile) {
                 echo "Checking if hatch file '${hatchFile}' exists and is valid..."
                 script {
                     catchError(message : 'Hatch file failed validation', buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
-                        if(!fileExists(hatchFile)) error("Hatch file was not be found '${hatchFile}'")
+                        if(!fileExists(hatchFile)) error("Hatch file was not found '${hatchFile}'")
                         hatch = readJSON(file: hatchFile)
                     }
                 }

@@ -184,7 +184,7 @@ def hatchEgg(def hatchFile) {
                         port_range.add(port.toString())
                     }
 
-                    def secretEnvs = hatch['secret'].properties.collectEntries { entry ->
+                    def secretEnvs = (hatch['secret'].properties ?: [:]).collectEntries { entry ->
                         entry.value = sh(returnStdout: true, script: "echo \$${entry.value}").trim()
                         return entry
                     }

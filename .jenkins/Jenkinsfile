@@ -184,9 +184,10 @@ def hatchEgg(def hatchFile) {
                         port_range.add(port.toString())
                     }
 
-                    def secretEnvs = (hatch['secret'].properties ?: [:]).collectEntries { entry ->
-                        String value = env[entry.value] as String
-                        return [(entry.key): value]
+                    def secretEnvs = [:]
+                    (hatch['secret'].properties ?: [:]).each { entry ->
+                        echo "Resolving secret ${entry.key}"
+                        secretEnvs[entry.key] = env[entry.value] as String
                     }
 
                     server['name']="Jenkins ${egg['name']} ${env.BUILD_NUMBER}".toString()

@@ -10,6 +10,8 @@ pipeline {
         PELICAN_BASE_URL = credentials('jenkins-pelican-base-url')
         PELICAN_USER_ID = credentials('jenkins-pelican-user-id')
         PELICAN_TOKEN = credentials('jenkins-pelican-token')
+
+        PELICAN_SECRET_CURSE_FORGE_API_KEY= credentials('jenkins-pelican-secret-curse-forge-api-key')
     }
 
     stages {
@@ -206,6 +208,13 @@ def hatchEgg(def hatchFile) {
                             'tags': ['jenkins'],
                             'port_range': port_range
                     ]
+
+                    hatch['secret'].properties.each { entry ->
+                        String name = entry.key
+                        String secret = entry.value
+                        String value = sh(returnStdout: true, script: "echo \$${secret}").trim()
+                        server['environment'][name] = value
+                    }
 
                 }
                 echo "Creating server from egg: ${eggFile}"

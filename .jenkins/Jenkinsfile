@@ -184,12 +184,19 @@ def hatchEgg(def hatchFile) {
                         port_range.add(port.toString())
                     }
 
+                    def secretEnvs = hatch['secret'].properties.collectEntries { entry ->
+                        entry.value = sh(returnStdout: true, script: "echo \$${entry.value}").trim()
+                        return entry
+                    }
+
                     server['name']="Jenkins ${env.JOB_BASE_NAME} ${env.BUILD_NUMBER}".toString()
                     server['external_id']=egg['uuid']
                     server['description']="Automated test server. Created by ${env.BUILD_URL}".toString()
                     server['user'] = env.PELICAN_USER_ID as Integer
                     server['egg'] = egg['id']
-                    server['environment'] = hatch['environment']
+                    server['environment'] = []
+                    server['environment'] += hatch['environment'] ?: [:]
+                    server['environment'] += secretEnvs
                     server['skip_scripts'] = false
                     server['oom_killer'] = false
                     server['limits'] = [
@@ -210,12 +217,7 @@ def hatchEgg(def hatchFile) {
                             'port_range': port_range
                     ]
 
-                    hatch['secret'].properties.each { entry ->
-                        String name = entry.key
-                        String secret = entry.value
-                        String value = sh(returnStdout: true, script: "echo \$${secret}").trim()
-                        server['environment'].putAt(name, value)
-                    }
+
 
                 }
                 echo "Creating server from egg: ${eggFile}"

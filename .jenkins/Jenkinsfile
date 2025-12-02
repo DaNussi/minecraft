@@ -178,7 +178,7 @@ def hatchEgg(def hatchFile) {
 
                     def port_range = []
                     for (port in 25600..<25700) {
-                        port_range.add(port)
+                        port_range.add(port.toString())
                     }
 
                     server['name']="Jenkins ${env.JOB_BASE_NAME} ${env.BUILD_NUMBER}".toString()

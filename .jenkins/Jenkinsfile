@@ -185,7 +185,7 @@ def hatchEgg(def hatchFile) {
                     }
 
                     def secretEnvs = [:]
-                    (hatch['secret'].properties ?: [:]).each { entry ->
+                    for (def entry : (hatch['secret'].properties ?: [:])) {
                         echo "Resolving secret ${entry.key}"
                         secretEnvs[entry.key] = env[entry.value] as String
                     }

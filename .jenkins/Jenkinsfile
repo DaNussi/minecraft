@@ -194,9 +194,7 @@ def hatchEgg(def hatchFile) {
                     server['description']="Automated test server. Created by ${env.BUILD_URL}".toString()
                     server['user'] = env.PELICAN_USER_ID as Integer
                     server['egg'] = egg['id']
-                    server['environment'] = [:]
-                    server['environment'] += hatch['environment'] ?: [:]
-                    server['environment'] += secretEnvs
+                    server['environment'] = (hatch['environment'] ?: [:]) + secretEnvs
                     server['skip_scripts'] = false
                     server['oom_killer'] = false
                     server['limits'] = [
@@ -220,6 +218,7 @@ def hatchEgg(def hatchFile) {
 
 
                 }
+                echo writeJSON(json: server, returnText: true, pretty: 4)
                 echo "Creating server from egg: ${eggFile}"
                 script {
                     catchError(message : "Failed to create server ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {

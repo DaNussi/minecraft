@@ -11,7 +11,7 @@ pipeline {
         PELICAN_USER_ID = credentials('jenkins-pelican-user-id')
         PELICAN_TOKEN = credentials('jenkins-pelican-token')
 
-        PELICAN_SECRET_CURSE_FORGE_API_KEY= credentials('jenkins-pelican-secret-curse-forge-api-key')
+        PELICAN_SECRET_CURSE_FORGE_API_KEY = credentials('jenkins-pelican-secret-curse-forge-api-key')
     }
 
     stages {
@@ -185,11 +185,11 @@ def hatchEgg(def hatchFile) {
                     }
 
                     def secretEnvs = (hatch['secret'].properties ?: [:]).collectEntries { entry ->
-                        entry.value = sh(returnStdout: true, script: "echo \$${entry.value}").trim()
-                        return entry
+                        String value = env[entry.value] as String
+                        return [(entry.key): value]
                     }
 
-                    server['name']="Jenkins ${env.JOB_BASE_NAME} ${env.BUILD_NUMBER}".toString()
+                    server['name']="Jenkins ${egg['name']} ${env.BUILD_NUMBER}".toString()
                     server['external_id']=egg['uuid']
                     server['description']="Automated test server. Created by ${env.BUILD_URL}".toString()
                     server['user'] = env.PELICAN_USER_ID as Integer

@@ -202,6 +202,7 @@ def hatchEgg(def hatchFile) {
                             'backups': 0,
                     ]
                     server['deploy'] = [
+                            'dedicated_ip': false,
                             'tags': ['jenkins'],
                             'port_range': port_range
                     ]

@@ -110,7 +110,7 @@ pipeline {
 }
 
 
-def hatchEgg(def hatchFile, def pelicanUser) {
+def hatchEgg(def hatchFile) {
     def eggFile = hatchFile.replace('.hatch.json', '.json')
     def hatch = [:]
     def egg = [:]
@@ -179,7 +179,7 @@ def hatchEgg(def hatchFile, def pelicanUser) {
                     server['name']="Jenkins ${env.JOB_BASE_NAME} ${env.BUILD_NUMBER}".toString()
                     server['external_id']=egg['uuid']
                     server['description']="Automated test server. Created by ${env.BUILD_URL}".toString()
-                    server['user'] = pelicanUser as Integer
+                    server['user'] = env.PELICAN_USER_ID as Integer
                     server['egg'] = egg['id']
                     server['environment'] = hatch['environment']
                     server['skip_scripts'] = false

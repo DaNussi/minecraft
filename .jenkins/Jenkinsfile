@@ -110,11 +110,11 @@ pipeline {
 }
 
 
-def hatchEgg(def hatchFile) {
+def hatchEgg(def hatchFile, def pelicanUser) {
     def eggFile = hatchFile.replace('.hatch.json', '.json')
     def hatch = [:]
     def egg = [:]
-
+    def server = [:]
 
     return {
         stage("Hatching Egg ${hatchFile}") {
@@ -173,6 +173,51 @@ def hatchEgg(def hatchFile) {
                 }
             }
 
+            stage("Creating server") {
+                script {
+
+                    server['name']="Jenkins ${env.JOB_BASE_NAME} ${env.BUILD_NUMBER}".toString()
+                    server['external_id']=egg['uuid']
+                    server['description']="Automated test server. Created by ${env.BUILD_URL}".toString()
+                    server['user'] = pelicanUser as Integer
+                    server['egg'] = egg['id']
+                    server['environment'] = hatch['environment']
+                    server['skip_scripts'] = false
+                    server['oom_killer'] = false
+                    server['limits']['memory'] = 10240
+                    server['limits']['swap'] = -1
+                    server['limits']['disk'] = 10240
+                    server['limits']['io'] = 1000
+                    server['limits']['cpu'] = 8000
+                    server['feature_limits']['databases'] = 0
+                    server['feature_limits']['allocations'] = 0
+                    server['feature_limits']['backups'] = 0
+                    server['deploy']['tags'] = ['jenkins']
+                    def port_range = []
+                    for (port in 25600..<25700) {
+                        port_range.add(port)
+                    }
+                    server['deploy']['port_range']=port_range
+
+                }
+                echo "Creating server from egg: ${eggFile}"
+                script {
+                    catchError(message : "Failed to create server ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
+                        def response = httpRequest url: "${env.PELICAN_BASE_URL}/servers".toString(),
+                                acceptType: 'APPLICATION_JSON',
+                                contentType: 'APPLICATION_JSON',
+                                httpMode: 'POST',
+                                requestBody: (writeJSON(json: server, returnText: true, pretty: 4) as String),
+                                validResponseCodes: '200:299',
+                                consoleLogResponseBody: false,
+                                customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+                        def body = readJSON text: response.content
+                        server['id'] = body['attributes']['id'] as int
+                        echo "Successfully created server '${eggFile}' with id: ${server['id']}"
+                    }
+                }
+            }
+
 
             stage("Deleting egg") {
                 echo "Deleting egg ${egg['uuid']} '${eggFile}'"
@@ -195,59 +240,7 @@ def hatchEgg(def hatchFile) {
 }
 
 
-//def testEgg(String eggFile, Map<String, Integer> eggIds,  Integer userId) {
-//    return {
-//        stage("Testing Egg ${eggFile}") {
-//
-//            stage("Updating Egg UUID") {
-//                script {
-//                    def eggJson = readJSON file: eggFile
-//
-//                    def eggUUID = getEggUuid(eggFile)
-//
-//                    eggJson['uuid'] = eggUUID
-//
-//                    writeJSON file: eggFile, json: eggJson
-//
-//                    echo "Set Egg ${eggFile} uuid to ${eggUUID}"
-//                }
-//            }
-//
-//            stage("Importing Egg") {
-//                script {
-//                    echo "Importing egg file: ${eggFile}"
-//
-//                    def response_file = eggFile.replace('.json', '.import.json')
-//
-//                    def response_status = sh(
-//                            script: """
-//                                curl -s -X POST --data-binary "@${eggFile}" -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" -- "${env.PELICAN_BASE_URL}/eggs/import"
-//                            """,
-//                            returnStdout: true
-//                    ).trim()
-//
-//                    if(response_status.startsWith('2')) {
-//                        def response = readJSON file: response_file
-//                        def eggId = response['attributes']['id'] as int
-//
-//                        eggIds[eggFile] = eggId
-//
-//                        echo "Successfully imported egg ${eggFile} id: ${eggId}"
-//
-//                    } else {
-//                        error "Failed to import egg ${eggFile}, response code: ${response_status}"
-//                    }
-//                }
-//            }
-//
-//            stage("Create Server") {
-//                script {
-//
-//                    def eggUUID = getEggUuid(eggFile)
-//
-//                    def egg = readJSON file: eggFile
-//
-//                    def serverJson = """
+
 //                    {
 //                      "external_id": "${eggUUID}",
 //                      "name": "Jenkins CI/CD - ${eggUUID}",
@@ -294,8 +287,7 @@ def hatchEgg(def hatchFile) {
 //                            "25665","25666","25667","25668","25669"
 //                        ]
 //                      }
-//                    }""".stripIndent().replace('\n', '').replace('\r', '').toString()
-//
+//                    }
 //                    echo serverJson
 //
 //
@@ -327,37 +319,3 @@ def hatchEgg(def hatchFile) {
 //                }
 //            }
 //
-//
-//            stage("Deleting Egg") {
-//                script {
-//                    echo "Deleting egg: ${eggFile}"
-//
-//                    def response_file = eggFile.replace('.json', '.delete.json')
-//
-//                    def eggUUID = getEggUuid(eggFile)
-//
-//                    def response = sh(
-//                            script: """
-//                                curl -s -X DELETE -o "${response_file}" -w '%{http_code}\\n' -H 'Accept: application/json' -H "Authorization: Bearer ${env.PELICAN_TOKEN}" -- "${env.PELICAN_BASE_URL}/eggs/${eggUUID}/uuid"
-//                            """,
-//                            returnStdout: true
-//                    ).trim()
-//
-//                    if(response.startsWith('2')) {
-//                        echo "Successfully deleted egg ${eggFile}"
-//
-//                    } else {
-//                        error "Failed to delete egg ${eggFile} with uuid ${eggUUID}, response code: ${response}"
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
-//def getEggUuid(String eggFile) {
-//    String gitUUID = env.GIT_COMMIT as String
-//    String fileUUID = eggFile
-//    String eggUUID = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
-//    return eggUUID
-//}

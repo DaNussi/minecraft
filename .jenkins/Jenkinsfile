@@ -127,6 +127,7 @@ def hatchEgg(def hatchFile) {
                     catchError(message : "Hatch file failed validation ${hatchFile}".toString(), buildResult: 'UNSTABLE', stageResult: 'NOT_BUILT', catchInterruptions: false) {
                         if(!fileExists(hatchFile)) error("Hatch file was not found '${hatchFile}'")
                         hatch = readJSON(file: hatchFile)
+                        //TODO: Check secrets if they are available
                         echo "Hatch file '${hatchFile}' exsists and is valid!"
                     }
                 }
@@ -166,7 +167,7 @@ def hatchEgg(def hatchFile) {
                                 httpMode: 'POST',
                                 requestBody: (writeJSON(json: egg, returnText: true, pretty: 4) as String),
                                 validResponseCodes: '200:299',
-                                consoleLogResponseBody: false,
+                                consoleLogResponseBody: true,
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
                         def body = readJSON text: response.content
                         egg['id'] = body['attributes']['id'] as int
@@ -213,7 +214,7 @@ def hatchEgg(def hatchFile) {
                         String name = entry.key
                         String secret = entry.value
                         String value = sh(returnStdout: true, script: "echo \$${secret}").trim()
-                        server['environment'][name] = value
+                        server['environment'].putAt(name, value)
                     }
 
                 }
@@ -245,7 +246,7 @@ def hatchEgg(def hatchFile) {
                                 contentType: 'APPLICATION_JSON',
                                 httpMode: 'DELETE',
                                 validResponseCodes: '200:299',
-                                consoleLogResponseBody: false,
+                                consoleLogResponseBody: true,
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
                         echo "Successfully deleted egg ${eggFile}"
                     }
@@ -255,84 +256,3 @@ def hatchEgg(def hatchFile) {
         }
     }
 }
-
-
-
-//                    {
-//                      "external_id": "${eggUUID}",
-//                      "name": "Jenkins CI/CD - ${eggUUID}",
-//                      "description": "${env.BUILD_NUMBER}",
-//                      "user": ${userId},
-//                      "egg": ${eggIds[eggFile]},
-//                      "environment": [],
-//                      "skip_scripts": false,
-//                      "oom_killer": false,
-//                      "start_on_completion": true,
-//                      "limits": {
-//                        "memory": 10240,
-//                        "disk": 10240,
-//                        "swap": -1,
-//                        "io": 1000,
-//                        "cpu": 800
-//                      },
-//                      "feature_limits": {
-//                        "databases": 0,
-//                        "allocations": 0,
-//                        "backups": 0
-//                      },
-//                      "allocation": {},
-//                      "deploy": {
-//                        "locations": [],
-//                        "tags": [
-//                          "jenkins"
-//                        ],
-//                        "dedicated_ip": false,
-//                        "port_range": [
-//                            "25600","25601","25602","25603","25604",
-//                            "25605","25606","25607","25608","25609",
-//                            "25610","25611","25612","25613","25614",
-//                            "25615","25616","25617","25618","25619",
-//                            "25620","25621","25622","25623","25624",
-//                            "25625","25626","25627","25628","25629",
-//                            "25630","25631","25632","25633","25634",
-//                            "25635","25636","25637","25638","25639",
-//                            "25640","25641","25642","25643","25644",
-//                            "25645","25646","25647","25648","25649",
-//                            "25650","25651","25652","25653","25654",
-//                            "25655","25656","25657","25658","25659",
-//                            "25660","25661","25662","25663","25664",
-//                            "25665","25666","25667","25668","25669"
-//                        ]
-//                      }
-//                    }
-//                    echo serverJson
-//
-//
-//
-//                    def response = httpRequest url: "${env.PELICAN_BASE_URL}/servers",
-//                            acceptType: 'APPLICATION_JSON',
-//                            contentType: 'APPLICATION_JSON',
-//                            httpMode: 'POST',
-//                            requestBody: serverJson,
-//                            validResponseCodes: '0:499',
-//                            customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
-//
-//                    if(response.status >= 200 && response.status < 400) {
-//                        def responseJson = readJSON text: response.content
-//                        def serverId = responseJson['attributes']['id']
-//
-//                        echo "Successfully created server ${serverId} ${eggFile}"
-//
-//                    } else {
-//                        def responseText = response.content
-//
-//                        echo "Failed to create server ${eggFile}, response code: ${response}"
-//                        echo "Failure Response:\n${responseText}"
-//
-//                        error "Failed to create server ${eggFile}, response code: ${response}"
-//                    }
-//
-//
-//                }
-//            }
-//

@@ -2,7 +2,8 @@
   "environment": {
     "LOADER_VERSION": "latest",
     "FABRIC_VERSION": "latest",
-    "MC_VERSION": "latest"
+    "MC_VERSION": "latest",
+    "SERVER_JARFILE": "server.jar"
   },
   "secret": {
 

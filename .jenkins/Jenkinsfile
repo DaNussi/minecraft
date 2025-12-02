@@ -147,10 +147,12 @@ def hatchEgg(def hatchFile) {
 
             stage("Mark egg") {
                 script {
+                    String gitUUID = env.GIT_COMMIT as String
+                    String fileUUID = eggFile
+                    egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
+                    egg['name'] = (egg['name'] as String) + " Jenkins/${env.BUILD_NUMBER}".toString()
+
                     catchError(message : "Failed to save egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
-                        String gitUUID = env.GIT_COMMIT as String
-                        String fileUUID = eggFile
-                        egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
                         writeJSON(file: eggFile, json: egg, pretty: 4)
                         echo "Set egg '${eggFile}' uuid to ${egg['uuid']}"
                     }
@@ -190,7 +192,7 @@ def hatchEgg(def hatchFile) {
                         secretEnvs[entry.key] = env[entry.value] as String
                     }
 
-                    server['name']="Jenkins ${egg['name']} ${env.BUILD_NUMBER}".toString()
+                    server['name']="${egg['name']} Jenkins/${env.BUILD_NUMBER}".toString()
                     server['external_id']=egg['uuid']
                     server['description']="Automated test server. Created by ${env.BUILD_URL}".toString()
                     server['user'] = env.PELICAN_USER_ID as Integer

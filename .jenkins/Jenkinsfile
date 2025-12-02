@@ -198,6 +198,7 @@ def hatchEgg(def hatchFile) {
                     server['environment'] = (hatch['environment'] ?: [:]) + secretEnvs
                     server['skip_scripts'] = false
                     server['oom_killer'] = false
+                    if(hatch['docker_image'] != null) server['docker_image'] = hatch['docker_image']
                     server['limits'] = [
                             'memory': 10240,
                             'swap': -1,

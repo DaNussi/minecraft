@@ -1,4 +1,5 @@
 {
+  "docker_image": "ghcr.io/parkervcp/yolks:java_21",
   "environment": {
     "PROJECT_ID": "1KVo5zza",
     "VERSION_ID": "cxaUlh3N"

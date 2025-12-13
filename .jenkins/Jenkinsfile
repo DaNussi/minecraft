@@ -310,7 +310,7 @@ def hatchEgg(def hatchFile) {
 							acceptType: 'APPLICATION_JSON',
 							contentType: 'TEXT_PLAIN',
 							httpMode: 'POST',
-							requestBody: 'EULA=true'.toString(),
+							requestBody: 'eula=true'.toString(),
 							validResponseCodes: '200:299',
 							consoleLogResponseBody: true,
 							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"
@@ -341,7 +341,6 @@ def hatchEgg(def hatchFile) {
 					while (server['current_state'] == 'offline' || server['current_state'] == null) {
 						retry(count: 3) {
 							echo "Server ${server['id']} is still pending..."
-							sleep(time: 3, unit: 'SECONDS')
 							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/resources".toString(),
 							acceptType: 'APPLICATION_JSON',
 							contentType: 'APPLICATION_JSON',
@@ -357,7 +356,6 @@ def hatchEgg(def hatchFile) {
 					while (server['current_state'] == 'starting') {
 						retry(count: 3) {
 							echo "Server ${server['id']} is still starting..."
-							sleep(time: 3, unit: 'SECONDS')
 							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/resources".toString(),
 							acceptType: 'APPLICATION_JSON',
 							contentType: 'APPLICATION_JSON',
@@ -374,6 +372,22 @@ def hatchEgg(def hatchFile) {
 						echo "Server ${server['id']} is online '${eggFile}'"
 					} else {
 						error "Server ${server['id']} failed to start. Current State: ${server['current_state']}"
+					}
+				}
+			}
+
+			stage("Delete server") {
+				script {
+					catchError(message : "Failed to delete server ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'NOT_BUILT', catchInterruptions: false) {
+						def response = httpRequest url: "${env.PELICAN_BASE_URL}/application/servers".toString(),
+						acceptType: 'APPLICATION_JSON',
+						contentType: 'APPLICATION_JSON',
+						httpMode: 'DELETE',
+						validResponseCodes: '200:299',
+						consoleLogResponseBody: true,
+						customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
+						def body = readJSON text: response.content
+						echo "Successfully deleted server '${eggFile}' with id: ${server['id']}"
 					}
 				}
 			}

@@ -1,4 +1,5 @@
 {
+  "docker_image": "ghcr.io/parkervcp/yolks:java_21 ",
   "environment": {
     "LOADER_VERSION": "latest",
     "FABRIC_VERSION": "latest",

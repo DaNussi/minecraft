@@ -206,7 +206,7 @@ def hatchEgg(def hatchFile) {
                     server['egg'] = egg['id']
                     server['skip_scripts'] = false
                     server['oom_killer'] = false
-                    server['start_on_completion']=true
+                    server['start_on_completion']=false
                     if(hatch['docker_image'] != null) server['docker_image'] = hatch['docker_image']
                     server['limits'] = [
                             'memory': 10240,
@@ -233,7 +233,7 @@ def hatchEgg(def hatchFile) {
                 echo "Creating server from egg: ${eggFile}"
                 script {
                     catchError(message : "Failed to create server ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
-                        def response = httpRequest url: "${env.PELICAN_BASE_URL}/servers".toString(),
+                        def response = httpRequest url: "${env.PELICAN_BASE_URL}/application/servers".toString(),
                                 acceptType: 'APPLICATION_JSON',
                                 contentType: 'APPLICATION_JSON',
                                 httpMode: 'POST',
@@ -243,17 +243,59 @@ def hatchEgg(def hatchFile) {
                                 customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
                         def body = readJSON text: response.content
                         server['id'] = body['attributes']['id'] as int
+						server['uuid'] = body['attributes']['uuid'] as String
                         echo "Successfully created server '${eggFile}' with id: ${server['id']}"
                     }
                 }
             }
+
+            stage("Installing server") {
+                script {
+					echo "Waiting for server ${server['id']} to finish installing '${eggFile}'"
+
+					while (server['status'] == 'installing') {
+						retry(count: 3) {
+							echo "Server ${server['id']} is still installing..."
+							sleep(time: 3, unit: 'SECONDS')
+							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}".toString(),
+							acceptType: 'APPLICATION_JSON',
+							contentType: 'APPLICATION_JSON',
+							httpMode: 'GET',
+							validResponseCodes: '200:299',
+							consoleLogResponseBody: true,
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+							def body = readJSON text: response.content
+							server['status'] = body['attributes']['status'] as String
+						}
+					}
+
+					echo "Installation of server ${server['id']} finished '${eggFile}'"
+                }
+            }
+
+			stage("Starting Server") {
+				script {
+					echo "Starting server ${server['id']} '${eggFile}'"
+					catchError(message : "Failed to start server ${server['id']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'FAILURE', catchInterruptions: false) {
+						httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/power".toString(),
+								acceptType: 'APPLICATION_JSON',
+								contentType: 'APPLICATION_JSON',
+								httpMode: 'POST',
+								requestBody: '{"signal":"start"}',
+								validResponseCodes: '200:299',
+								consoleLogResponseBody: true,
+								customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+						echo "Successfully started server ${server['id']} '${eggFile}'"
+					}
+				}
+			}
 
 
             stage("Deleting egg") {
                 echo "Deleting egg ${egg['uuid']} '${eggFile}'"
                 script {
                     catchError(message : "Failed to delete egg ${egg['uuid']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'NOT_BUILT', catchInterruptions: false) {
-                        httpRequest url: "${env.PELICAN_BASE_URL}/eggs/${egg['uuid']}/uuid".toString(),
+                        httpRequest url: "${env.PELICAN_BASE_URL}/application/eggs/${egg['uuid']}/uuid".toString(),
                                 acceptType: 'APPLICATION_JSON',
                                 contentType: 'APPLICATION_JSON',
                                 httpMode: 'DELETE',

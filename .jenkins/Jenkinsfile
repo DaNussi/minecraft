@@ -199,7 +199,7 @@ def hatchEgg(def hatchFile) {
                     }
                     server['environment'] = envs
 
-                    server['name']="${egg['name']} Jenkins/${env.BUILD_NUMBER}".toString()
+                    server['name']=egg['name']
                     server['external_id']=egg['uuid']
                     server['description']="Automated test server. Created by ${env.BUILD_URL}".toString()
                     server['user'] = env.PELICAN_USER_ID as Integer

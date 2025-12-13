@@ -297,29 +297,26 @@ def hatchEgg(def hatchFile) {
             }
 
 			stage("Accept EULA") {
-				when {
-					expression {
-						egg['features'].each { feature ->
-							if (feature == 'eula') {
-								return true
-							}
-						}
-
-						return false
-					}
-				}
 				script {
+					if (!egg['features'].contains('eula')) {
+						catchError(message : "No eula required ${server['id']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'NOT_BUILT', catchInterruptions: false) {
+							sh 'exit 1'
+						}
+					} else {
 						echo "Accepting EULA for server ${server['id']} '${eggFile}'"
 						catchError(message : "Failed to accept EULA for server ${server['id']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'FAILURE', catchInterruptions: false) {
-						httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/files/write?file=eula.txt".toString(),
-								acceptType: 'APPLICATION_JSON',
-								contentType: 'TEXT_PLAIN',
-								httpMode: 'POST',
-								requestBody: 'EULA=true'.toString(),
-								validResponseCodes: '200:299',
-								consoleLogResponseBody: true,
-								customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
+							httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/files/write?file=eula.txt".toString(),
+
+							acceptType: 'APPLICATION_JSON',
+							contentType: 'TEXT_PLAIN',
+							httpMode: 'POST',
+							requestBody: 'EULA=true'.toString(),
+							validResponseCodes: '200:299',
+							consoleLogResponseBody: true,
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"
+							]]
 						echo "Successfully accepted EULA for server ${server['id']} '${eggFile}'"
+						}
 					}
 				}
 			}

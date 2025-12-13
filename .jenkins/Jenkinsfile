@@ -262,13 +262,13 @@ def hatchEgg(def hatchFile) {
 						retry(count: 3) {
 							echo "Server ${server['id']} is pending install..."
 							sleep(time: 3, unit: 'SECONDS')
-							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}".toString(),
+							def response = httpRequest url: "${env.PELICAN_BASE_URL}/application/servers/${server['id']}".toString(),
 							acceptType: 'APPLICATION_JSON',
 							contentType: 'APPLICATION_JSON',
 							httpMode: 'GET',
 							validResponseCodes: '200:299',
 							consoleLogResponseBody: true,
-							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
 							def body = readJSON text: response.content
 							server['status'] = body['attributes']['status'] as String
 						}
@@ -280,13 +280,13 @@ def hatchEgg(def hatchFile) {
 						retry(count: 3) {
 							echo "Server ${server['id']} is still installing..."
 							sleep(time: 3, unit: 'SECONDS')
-							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}".toString(),
+							def response = httpRequest url: "${env.PELICAN_BASE_URL}/application/servers/${server['id']}".toString(),
 							acceptType: 'APPLICATION_JSON',
 							contentType: 'APPLICATION_JSON',
 							httpMode: 'GET',
 							validResponseCodes: '200:299',
 							consoleLogResponseBody: true,
-							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
 							def body = readJSON text: response.content
 							server['status'] = body['attributes']['status'] as String
 						}

@@ -1,7 +1,7 @@
 {
   "environment": {
     "PROJECT_ID": "256183",
-    "VERSION_ID": "latest"
+    "VERSION_ID": "3558966"
   },
   "secret": {
     "API_KEY": "PELICAN_SECRET_CURSE_FORGE_API_KEY"

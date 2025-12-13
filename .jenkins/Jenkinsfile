@@ -206,6 +206,7 @@ def hatchEgg(def hatchFile) {
                     server['egg'] = egg['id']
                     server['skip_scripts'] = false
                     server['oom_killer'] = false
+                    server['start_on_completion']=true
                     if(hatch['docker_image'] != null) server['docker_image'] = hatch['docker_image']
                     server['limits'] = [
                             'memory': 10240,

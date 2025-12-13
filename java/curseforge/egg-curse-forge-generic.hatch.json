@@ -1,7 +1,8 @@
 {
+  "docker_image": "ghcr.io/parkervcp/yolks:java_8",
   "environment": {
     "PROJECT_ID": "256183",
-    "VERSION_ID": "3558966"
+    "VERSION_ID": "3302998"
   },
   "secret": {
     "API_KEY": "PELICAN_SECRET_CURSE_FORGE_API_KEY"

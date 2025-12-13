@@ -297,6 +297,17 @@ def hatchEgg(def hatchFile) {
             }
 
 			stage("Accept EULA") {
+				when {
+					expression {
+						egg['features'].each { feature ->
+							if (feature == 'eula') {
+								return true
+							}
+						}
+
+						return false
+					}
+				}
 				script {
 						echo "Accepting EULA for server ${server['id']} '${eggFile}'"
 						catchError(message : "Failed to accept EULA for server ${server['id']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'FAILURE', catchInterruptions: false) {
@@ -340,7 +351,7 @@ def hatchEgg(def hatchFile) {
 							httpMode: 'GET',
 							validResponseCodes: '200:299',
 							consoleLogResponseBody: true,
-							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
 							def body = readJSON text: response.content
 							server['current_state'] = body['attributes']['current_state'] as String
 						}
@@ -356,7 +367,7 @@ def hatchEgg(def hatchFile) {
 							httpMode: 'GET',
 							validResponseCodes: '200:299',
 							consoleLogResponseBody: true,
-							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
 							def body = readJSON text: response.content
 							server['current_state'] = body['attributes']['current_state'] as String
 						}

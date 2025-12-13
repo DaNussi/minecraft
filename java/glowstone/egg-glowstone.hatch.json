@@ -1,0 +1,9 @@
+{
+  "docker_image": "ghcr.io/parkervcp/yolks:java_8",
+  "environment": {
+    "FTB_SEARCH_TERM": "FTB Presents Skyfactory 3"
+  },
+  "secret": {
+
+  }
+}

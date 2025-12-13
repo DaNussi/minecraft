@@ -1,0 +1,9 @@
+{
+  "docker_image": "ghcr.io/parkervcp/yolks:java_21",
+  "environment": {
+    "MC_VERSION": "1.21.10"
+  },
+  "secret": {
+
+  }
+}

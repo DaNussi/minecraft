@@ -296,6 +296,23 @@ def hatchEgg(def hatchFile) {
                 }
             }
 
+			stage("Accept EULA") {
+				script {
+						echo "Accepting EULA for server ${server['id']} '${eggFile}'"
+						catchError(message : "Failed to accept EULA for server ${server['id']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'FAILURE', catchInterruptions: false) {
+						httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/files/write?file=eula.txt".toString(),
+								acceptType: 'APPLICATION_JSON',
+								contentType: 'APPLICATION_JSON',
+								httpMode: 'POST',
+								requestBody: 'EULA=true'.toString(),
+								validResponseCodes: '200:299',
+								consoleLogResponseBody: true,
+								customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
+						echo "Successfully accepted EULA for server ${server['id']} '${eggFile}'"
+					}
+				}
+			}
+
 			stage("Starting Server") {
 				script {
 					echo "Starting server ${server['id']} '${eggFile}'"
@@ -309,6 +326,46 @@ def hatchEgg(def hatchFile) {
 								consoleLogResponseBody: true,
 								customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
 						echo "Successfully started server ${server['id']} '${eggFile}'"
+					}
+
+
+					echo "Waiting for server ${server['id']} to start '${eggFile}'"
+					while (server['current_state'] == 'offline') {
+						retry(count: 3) {
+							echo "Server ${server['id']} is still pending..."
+							sleep(time: 3, unit: 'SECONDS')
+							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/resources".toString(),
+							acceptType: 'APPLICATION_JSON',
+							contentType: 'APPLICATION_JSON',
+							httpMode: 'GET',
+							validResponseCodes: '200:299',
+							consoleLogResponseBody: true,
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
+							def body = readJSON text: response.content
+							server['current_state'] = body['attributes']['current_state'] as String
+						}
+					}
+					echo "Server ${server['id']} is starting '${eggFile}'"
+					while (server['current_state'] == 'starting') {
+						retry(count: 3) {
+							echo "Server ${server['id']} is still starting..."
+							sleep(time: 3, unit: 'SECONDS')
+							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/resources".toString(),
+							acceptType: 'APPLICATION_JSON',
+							contentType: 'APPLICATION_JSON',
+							httpMode: 'GET',
+							validResponseCodes: '200:299',
+							consoleLogResponseBody: true,
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
+							def body = readJSON text: response.content
+							server['current_state'] = body['attributes']['current_state'] as String
+						}
+					}
+
+					if (server['current_state'] == 'online') {
+						echo "Server ${server['id']} is online '${eggFile}'"
+					} else {
+						error "Server ${server['id']} failed to start. Current State: ${server['current_state']}"
 					}
 				}
 			}

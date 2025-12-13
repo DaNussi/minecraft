@@ -1,0 +1,9 @@
+{
+  "docker_image": "ghcr.io/parkervcp/yolks:java_17",
+  "environment": {
+
+  },
+  "secret": {
+
+  }
+}

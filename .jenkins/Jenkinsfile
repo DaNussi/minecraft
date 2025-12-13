@@ -164,7 +164,7 @@ def hatchEgg(def hatchFile) {
                     echo "Importing egg file into the pelican panel: ${eggFile}"
                     script {
                         catchError(message : "Failed to import egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
-                            def response = httpRequest url: "${env.PELICAN_BASE_URL}/eggs/import?format=json".toString(),
+                            def response = httpRequest url: "${env.PELICAN_BASE_URL}/application/eggs/import?format=json".toString(),
                                     acceptType: 'APPLICATION_JSON',
                                     contentType: 'APPLICATION_JSON',
                                     httpMode: 'POST',

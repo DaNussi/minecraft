@@ -379,7 +379,7 @@ def hatchEgg(def hatchFile) {
 			stage("Delete server") {
 				script {
 					catchError(message : "Failed to delete server ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'NOT_BUILT', catchInterruptions: false) {
-						def response = httpRequest url: "${env.PELICAN_BASE_URL}/application/servers".toString(),
+						def response = httpRequest url: "${env.PELICAN_BASE_URL}/application/servers/${server['id']}".toString(),
 						acceptType: 'APPLICATION_JSON',
 						contentType: 'APPLICATION_JSON',
 						httpMode: 'DELETE',

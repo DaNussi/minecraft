@@ -337,10 +337,12 @@ def hatchEgg(def hatchFile) {
 					}
 
 
+					def counter = 0
 					echo "Waiting for server ${server['id']} to start '${eggFile}'"
-					while (server['current_state'] == 'offline' || server['current_state'] == null) {
+					while ((server['current_state'] == 'offline' || server['current_state'] == null) && counter < 15) {
 						retry(count: 3) {
 							echo "Server ${server['id']} is still pending..."
+							counter += 1
 							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/resources".toString(),
 							acceptType: 'APPLICATION_JSON',
 							contentType: 'APPLICATION_JSON',
@@ -353,7 +355,7 @@ def hatchEgg(def hatchFile) {
 						}
 					}
 					echo "Server ${server['id']} is starting '${eggFile}'"
-					while (server['current_state'] == 'starting') {
+					while (server['current_state'] == 'starting' && counter < 15) {
 						retry(count: 3) {
 							echo "Server ${server['id']} is still starting..."
 							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/resources".toString(),

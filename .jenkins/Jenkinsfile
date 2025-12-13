@@ -299,7 +299,7 @@ def hatchEgg(def hatchFile) {
 
 			stage("Accept EULA") {
 				script {
-					if (!egg['features'].contains('eula')) {
+					if (egg['features'] == null || !egg['features'].contains('eula')) {
 						catchError(message : "No eula required ${server['id']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'NOT_BUILT', catchInterruptions: false) {
 							sh 'exit 1'
 						}

@@ -9,7 +9,8 @@ pipeline {
     environment {
         PELICAN_BASE_URL = credentials('jenkins-pelican-base-url')
         PELICAN_USER_ID = credentials('jenkins-pelican-user-id')
-        PELICAN_TOKEN = credentials('jenkins-pelican-token')
+        PELICAN_APPLICATION_TOKEN = credentials('jenkins-pelican-token')
+		PELICAN_CLIENT_TOKEN = credentials('jenkins-pelican-client-token')
 
         PELICAN_SECRET_CURSE_FORGE_API_KEY = credentials('jenkins-pelican-secret-curse-forge-api-key')
     }
@@ -24,10 +25,14 @@ pipeline {
                     if (PELICAN_USER_ID?.trim()?.length() == 0) {
                         error 'PELICAN_USER_ID parameter is required'
                     }
-                    if (PELICAN_TOKEN?.trim()?.length() == 0) {
-                        error 'PELICAN_TOKEN parameter is required'
+                    if (PELICAN_APPLICATION_TOKEN?.trim()?.length() == 0) {
+                        error 'PELICAN_APPLICATION_TOKEN parameter is required'
 
                     }
+					if (PELICAN_CLIENT_TOKEN?.trim()?.length() == 0) {
+						error 'PELICAN_CLIENT_TOKEN parameter is required'
+
+					}
                 }
             }
         }
@@ -171,7 +176,7 @@ def hatchEgg(def hatchFile) {
                                     requestBody: (writeJSON(json: egg, returnText: true, pretty: 4) as String),
                                     validResponseCodes: '200:299',
                                     consoleLogResponseBody: true,
-                                    customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+                                    customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
                             def body = readJSON text: response.content
                             egg['id'] = body['attributes']['id'] as int
                             echo "Successfully imported egg '${eggFile}' into the pelican panel with id: ${egg['id']}"
@@ -240,7 +245,7 @@ def hatchEgg(def hatchFile) {
                                 requestBody: (writeJSON(json: server, returnText: true, pretty: 4) as String),
                                 validResponseCodes: '200:299',
                                 consoleLogResponseBody: true,
-                                customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+                                customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
                         def body = readJSON text: response.content
                         server['id'] = body['attributes']['id'] as int
 						server['uuid'] = body['attributes']['uuid'] as String
@@ -251,8 +256,26 @@ def hatchEgg(def hatchFile) {
 
             stage("Installing server") {
                 script {
-					echo "Waiting for server ${server['id']} to finish installing '${eggFile}'"
+					echo "Waiting for server ${server['id']} to start installing '${eggFile}'"
 
+					while (server['status'] == null) {
+						retry(count: 3) {
+							echo "Server ${server['id']} is pending install..."
+							sleep(time: 3, unit: 'SECONDS')
+							def response = httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}".toString(),
+							acceptType: 'APPLICATION_JSON',
+							contentType: 'APPLICATION_JSON',
+							httpMode: 'GET',
+							validResponseCodes: '200:299',
+							consoleLogResponseBody: true,
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
+							def body = readJSON text: response.content
+							server['status'] = body['attributes']['status'] as String
+						}
+					}
+					echo "Server ${server['id']} has started installing..."
+
+					echo "Waiting for server ${server['id']} to finish installing '${eggFile}'"
 					while (server['status'] == 'installing') {
 						retry(count: 3) {
 							echo "Server ${server['id']} is still installing..."
@@ -263,7 +286,7 @@ def hatchEgg(def hatchFile) {
 							httpMode: 'GET',
 							validResponseCodes: '200:299',
 							consoleLogResponseBody: true,
-							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+							customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
 							def body = readJSON text: response.content
 							server['status'] = body['attributes']['status'] as String
 						}
@@ -284,7 +307,7 @@ def hatchEgg(def hatchFile) {
 								requestBody: '{"signal":"start"}',
 								validResponseCodes: '200:299',
 								consoleLogResponseBody: true,
-								customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+								customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_CLIENT_TOKEN}"]]
 						echo "Successfully started server ${server['id']} '${eggFile}'"
 					}
 				}
@@ -301,7 +324,7 @@ def hatchEgg(def hatchFile) {
                                 httpMode: 'DELETE',
                                 validResponseCodes: '200:299',
                                 consoleLogResponseBody: true,
-                                customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+                                customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
                         echo "Successfully deleted egg ${eggFile}"
                     }
                 }

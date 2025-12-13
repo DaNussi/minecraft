@@ -302,7 +302,7 @@ def hatchEgg(def hatchFile) {
 						catchError(message : "Failed to accept EULA for server ${server['id']} ${eggFile}".toString(), buildResult: 'SUCCESS', stageResult: 'FAILURE', catchInterruptions: false) {
 						httpRequest url: "${env.PELICAN_BASE_URL}/client/servers/${server['uuid']}/files/write?file=eula.txt".toString(),
 								acceptType: 'APPLICATION_JSON',
-								contentType: 'APPLICATION_JSON',
+								contentType: 'TEXT_PLAIN',
 								httpMode: 'POST',
 								requestBody: 'EULA=true'.toString(),
 								validResponseCodes: '200:299',
@@ -330,7 +330,7 @@ def hatchEgg(def hatchFile) {
 
 
 					echo "Waiting for server ${server['id']} to start '${eggFile}'"
-					while (server['current_state'] == 'offline') {
+					while (server['current_state'] == 'offline' || server['current_state'] == null) {
 						retry(count: 3) {
 							echo "Server ${server['id']} is still pending..."
 							sleep(time: 3, unit: 'SECONDS')

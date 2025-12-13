@@ -160,20 +160,22 @@ def hatchEgg(def hatchFile) {
             }
 
             stage("Importing egg") {
-                echo "Importing egg file into the pelican panel: ${eggFile}"
-                script {
-                    catchError(message : "Failed to import egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
-                        def response = httpRequest url: "${env.PELICAN_BASE_URL}/eggs/import?format=json".toString(),
-                                acceptType: 'APPLICATION_JSON',
-                                contentType: 'APPLICATION_JSON',
-                                httpMode: 'POST',
-                                requestBody: (writeJSON(json: egg, returnText: true, pretty: 4) as String),
-                                validResponseCodes: '200:299',
-                                consoleLogResponseBody: true,
-                                customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
-                        def body = readJSON text: response.content
-                        egg['id'] = body['attributes']['id'] as int
-                        echo "Successfully imported egg '${eggFile}' into the pelican panel with id: ${egg['id']}"
+                retry(count: 3) {
+                    echo "Importing egg file into the pelican panel: ${eggFile}"
+                    script {
+                        catchError(message : "Failed to import egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
+                            def response = httpRequest url: "${env.PELICAN_BASE_URL}/eggs/import?format=json".toString(),
+                                    acceptType: 'APPLICATION_JSON',
+                                    contentType: 'APPLICATION_JSON',
+                                    httpMode: 'POST',
+                                    requestBody: (writeJSON(json: egg, returnText: true, pretty: 4) as String),
+                                    validResponseCodes: '200:299',
+                                    consoleLogResponseBody: true,
+                                    customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_TOKEN}"]]
+                            def body = readJSON text: response.content
+                            egg['id'] = body['attributes']['id'] as int
+                            echo "Successfully imported egg '${eggFile}' into the pelican panel with id: ${egg['id']}"
+                        }
                     }
                 }
             }

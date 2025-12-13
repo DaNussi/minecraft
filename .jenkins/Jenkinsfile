@@ -186,18 +186,22 @@ def hatchEgg(def hatchFile) {
                         port_range.add(port.toString())
                     }
 
-                    def secretEnvs = [:]
-                    for (def entry : (hatch['secret'].properties)) {
+                    def envs = [:]
+                    hatch['secret'].each { entry ->
                         echo "Resolving secret ${entry.key}"
-                        secretEnvs[entry.key] = env[entry.value] as String
+                        envs[entry.key] = env[entry.value] as String
                     }
+                    hatch['environment'].each { entry ->
+                        echo "Setting env ${entry.key}"
+                        envs[entry.key] = entry.value as String
+                    }
+                    server['environment'] = envs
 
                     server['name']="${egg['name']} Jenkins/${env.BUILD_NUMBER}".toString()
                     server['external_id']=egg['uuid']
                     server['description']="Automated test server. Created by ${env.BUILD_URL}".toString()
                     server['user'] = env.PELICAN_USER_ID as Integer
                     server['egg'] = egg['id']
-                    server['environment'] = (hatch['environment'] ?: [:]) + secretEnvs
                     server['skip_scripts'] = false
                     server['oom_killer'] = false
                     if(hatch['docker_image'] != null) server['docker_image'] = hatch['docker_image']

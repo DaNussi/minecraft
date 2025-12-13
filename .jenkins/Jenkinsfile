@@ -119,6 +119,7 @@ pipeline {
 
 def hatchEgg(def hatchFile) {
     def eggFile = hatchFile.replace('.hatch.json', '.json')
+	def eggFileName = new File(eggFile).getName()
     def hatch = [:]
     def egg = [:]
     def server = [:]
@@ -155,7 +156,7 @@ def hatchEgg(def hatchFile) {
                     String gitUUID = env.GIT_COMMIT as String
                     String fileUUID = eggFile
                     egg['uuid'] = UUID.nameUUIDFromBytes((fileUUID + '@' + gitUUID).getBytes()).toString()
-                    egg['name'] = (egg['name'] as String) + " Jenkins/${env.BUILD_NUMBER}".toString()
+                    egg['name'] = (egg['name'] as String) + " ${eggFileName} Jenkins/${env.BUILD_NUMBER}".toString()
 
                     catchError(message : "Failed to save egg ${eggFile}".toString(), buildResult: 'FAILURE', stageResult: 'FAILURE', catchInterruptions: false) {
                         writeJSON(file: eggFile, json: egg, pretty: 4)

@@ -388,7 +388,6 @@ def hatchEgg(def hatchFile) {
 						validResponseCodes: '200:299',
 						consoleLogResponseBody: true,
 						customHeaders: [[name: 'Authorization', value: "Bearer ${env.PELICAN_APPLICATION_TOKEN}"]]
-						def body = readJSON text: response.content
 						echo "Successfully deleted server '${eggFile}' with id: ${server['id']}"
 					}
 				}

@@ -1,94 +1,124 @@
 {
-    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
-    "meta": {
-        "version": "PTDL_v2",
-        "update_url": null
+  "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+  "author": "josdekurk@gmail.com",
+  "config": {
+    "files": "{\n    \"server.properties\": {\n        \"parser\": \"properties\",\n        \"find\": {\n            \"server-port\": \"{{server.allocations.default.port}}\",\n            \"server-name\": \"{{server.environment.SERVERNAME}}\",\n            \"gamemode\": \"{{server.environment.GAMEMODE}}\",\n            \"difficulty\": \"{{server.environment.DIFFICULTY}}\",\n            \"allow-cheats\": \"{{server.environment.CHEATS}}\",\n            \"max-threads\": \"2\"\n        }\n    }\n}",
+    "logs": "{}",
+    "startup": "{\n    \"done\": \"Server started\"\n}",
+    "stop": "stop"
+  },
+  "description": "Bedrock Edition (also known as the Bedrock Version, Bedrock Codebase, Bedrock Engine or just Bedrock) refers to the multi-platform family of editions of Minecraft developed by Mojang AB, Microsoft Studios, 4J Studios, and SkyBox Labs. Prior to this term, as the engine originated with Pocket Edition, this entire product family was referred to as \"Pocket Edition\", \"MCPE\", or \"Pocket/Windows 10 Edition\".",
+  "docker_images": {
+    "ghcr.io/parkervcp/yolks:box64": "ghcr.io/parkervcp/yolks:box64"
+  },
+  "exported_at": "2025-12-20T03:30:46+00:00",
+  "features": [
+    "pid_limit"
+  ],
+  "file_denylist": [],
+  "id": 736,
+  "image": null,
+  "meta": {
+    "update_url": null,
+    "version": "PLCN_v3"
+  },
+  "name": "Vanilla Bedrock ARM64",
+  "scripts": {
+    "installation": {
+      "container": "ghcr.io/parkervcp/installers:debian",
+      "entrypoint": "bash",
+      "script": "#!/bin/bash\r\n\r\napt update\r\napt install -y zip unzip wget curl\r\n\r\nif [ ! -d /mnt/server/ ]; then\r\n    mkdir /mnt/server/\r\nfi\r\n\r\ncd /mnt/server\r\n\r\n# Minecraft CDN Akamai blocks script user-agents\r\nRANDVERSION=$(echo $((1 + $RANDOM % 4000)))\r\n\r\nif [ -z \"${BEDROCK_VERSION}\" ] || [ \"${BEDROCK_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"\\n Downloading latest Bedrock server\"\r\n    curl -L -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.$RANDVERSION.212 Safari/537.36\" -H \"Accept-Language: en\" -H \"Accept-Encoding: gzip, deflate\" -o versions.html.gz https://net-secondary.web.minecraft-services.net/api/v1.0/download/links\r\n    DOWNLOAD_URL=$(zgrep -o 'https://www.minecraft.net/bedrockdedicatedserver/bin-linux/[^\"]*' versions.html.gz)\r\nelse \r\n    echo -e \"\\n Downloading ${BEDROCK_VERSION} Bedrock server\"\r\n    DOWNLOAD_URL=https://www.minecraft.net/bedrockdedicatedserver/bin-linux/bedrock-server-$BEDROCK_VERSION.zip\r\nfi\r\n\r\nDOWNLOAD_FILE=$(echo ${DOWNLOAD_URL} | cut -d\"/\" -f5) # Retrieve archive name\r\n\r\necho -e \"backing up config files\"\r\nrm *.bak versions.html.gz\r\ncp server.properties server.properties.bak\r\ncp permissions.json permissions.json.bak\r\ncp allowlist.json allowlist.json.bak\r\n\r\necho -e \"Downloading files from: $DOWNLOAD_URL\"\r\n\r\ncurl -L -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.$RANDVERSION.212 Safari/537.36\" -H \"Accept-Language: en\" -o $DOWNLOAD_FILE $DOWNLOAD_URL\r\n\r\necho -e \"Unpacking server files\"\r\nunzip -o $DOWNLOAD_FILE\r\n\r\necho -e \"Cleaning up after installing\"\r\nrm $DOWNLOAD_FILE\r\n\r\necho 'emit-server-telemetry=true' >> server.properties\r\n\r\necho -e \"restoring backup config files - on first install there will be file not found errors which you can ignore.\"\r\ncp -rf server.properties.bak server.properties\r\ncp -rf permissions.json.bak permissions.json\r\ncp -rf allowlist.json.bak allowlist.json\r\n\r\nchmod +x bedrock_server\r\n\r\necho -e \"Install Completed\""
+    }
+  },
+  "startup_commands": {
+    "Default": "box64 ./bedrock_server"
+  },
+  "tags": [],
+  "uuid": "1be3a55a-a30f-4f99-861d-2a09ba587ddd",
+  "variables": [
+    {
+      "default_value": "false",
+      "description": "If true then cheats like commands can be used.\r\n\r\nAllowed values: \"true\" or \"false\"",
+      "env_variable": "CHEATS",
+      "name": "Allow cheats",
+      "rules": [
+        "required",
+        "string",
+        "in:true,false"
+      ],
+      "sort": null,
+      "user_editable": true,
+      "user_viewable": true
     },
-    "exported_at": "2025-06-18T12:40:19+02:00",
-    "name": "Vanilla Bedrock ARM64",
-    "author": "josdekurk@gmail.com",
-    "description": "Bedrock Edition (also known as the Bedrock Version, Bedrock Codebase, Bedrock Engine or just Bedrock) refers to the multi-platform family of editions of Minecraft developed by Mojang AB, Microsoft Studios, 4J Studios, and SkyBox Labs. Prior to this term, as the engine originated with Pocket Edition, this entire product family was referred to as \"Pocket Edition\", \"MCPE\", or \"Pocket\/Windows 10 Edition\".",
-    "features": [
-        "pid_limit"
-    ],
-    "docker_images": {
-        "ghcr.io\/parkervcp\/yolks:box64": "ghcr.io\/parkervcp\/yolks:box64"
+    {
+      "default_value": "latest",
+      "description": "The version of bedrock. (Ex. 1.7.0.13)\r\n\r\nDefault version is latest.",
+      "env_variable": "BEDROCK_VERSION",
+      "name": "Bedrock Version",
+      "rules": [
+        "required",
+        "string",
+        "max:20"
+      ],
+      "sort": null,
+      "user_editable": true,
+      "user_viewable": true
     },
-    "file_denylist": [],
-    "startup": "box64 .\/bedrock_server",
-    "config": {
-        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"server-name\": \"{{server.build.env.SERVERNAME}}\",\r\n            \"gamemode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"difficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"allow-cheats\": \"{{server.build.env.CHEATS}}\",\r\n            \"max-threads\": \"2\"\r\n        }\r\n    }\r\n}",
-        "startup": "{\r\n    \"done\": \"Server started\"\r\n}",
-        "logs": "{}",
-        "stop": "stop"
+    {
+      "default_value": "easy",
+      "description": "Allowed values: \"peaceful\", \"easy\", \"normal\", or \"hard\"",
+      "env_variable": "DIFFICULTY",
+      "name": "Difficulty",
+      "rules": [
+        "required",
+        "string",
+        "in:peaceful,easy,normal,hard"
+      ],
+      "sort": null,
+      "user_editable": true,
+      "user_viewable": true
     },
-    "scripts": {
-        "installation": {
-            "script": "#!\/bin\/bash\r\n\r\napt update\r\napt install -y zip unzip wget curl\r\n\r\nif [ ! -d \/mnt\/server\/ ]; then\r\n    mkdir \/mnt\/server\/\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\n# Minecraft CDN Akamai blocks script user-agents\r\nRANDVERSION=$(echo $((1 + $RANDOM % 4000)))\r\n\r\nif [ -z \"${BEDROCK_VERSION}\" ] || [ \"${BEDROCK_VERSION}\" == \"latest\" ]; then\r\n    echo -e \"\\n Downloading latest Bedrock server\"\r\n    curl -L -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/90.0.$RANDVERSION.212 Safari\/537.36\" -H \"Accept-Language: en\" -H \"Accept-Encoding: gzip, deflate\" -o versions.html.gz https:\/\/net-secondary.web.minecraft-services.net\/api\/v1.0\/download\/links\r\n    DOWNLOAD_URL=$(zgrep -o 'https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/[^\"]*' versions.html.gz)\r\nelse \r\n    echo -e \"\\n Downloading ${BEDROCK_VERSION} Bedrock server\"\r\n    DOWNLOAD_URL=https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$BEDROCK_VERSION.zip\r\nfi\r\n\r\nDOWNLOAD_FILE=$(echo ${DOWNLOAD_URL} | cut -d\"\/\" -f5) # Retrieve archive name\r\n\r\necho -e \"backing up config files\"\r\nrm *.bak versions.html.gz\r\ncp server.properties server.properties.bak\r\ncp permissions.json permissions.json.bak\r\ncp allowlist.json allowlist.json.bak\r\n\r\necho -e \"Downloading files from: $DOWNLOAD_URL\"\r\n\r\ncurl -L -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/90.0.$RANDVERSION.212 Safari\/537.36\" -H \"Accept-Language: en\" -o $DOWNLOAD_FILE $DOWNLOAD_URL\r\n\r\necho -e \"Unpacking server files\"\r\nunzip -o $DOWNLOAD_FILE\r\n\r\necho -e \"Cleaning up after installing\"\r\nrm $DOWNLOAD_FILE\r\n\r\necho 'emit-server-telemetry=true' >> server.properties\r\n\r\necho -e \"restoring backup config files - on first install there will be file not found errors which you can ignore.\"\r\ncp -rf server.properties.bak server.properties\r\ncp -rf permissions.json.bak permissions.json\r\ncp -rf allowlist.json.bak allowlist.json\r\n\r\nchmod +x bedrock_server\r\n\r\necho -e \"Install Completed\"",
-            "container": "ghcr.io\/parkervcp\/installers:debian",
-            "entrypoint": "bash"
-        }
+    {
+      "default_value": "survival",
+      "description": "Allowed values: \"survival\", \"creative\", or \"adventure\"",
+      "env_variable": "GAMEMODE",
+      "name": "Gamemode",
+      "rules": [
+        "required",
+        "string",
+        "in:survival,creative,adventure"
+      ],
+      "sort": null,
+      "user_editable": true,
+      "user_viewable": true
     },
-    "variables": [
-        {
-            "name": "Bedrock Version",
-            "description": "The version of bedrock. (Ex. 1.7.0.13)\r\n\r\nDefault version is latest.",
-            "env_variable": "BEDROCK_VERSION",
-            "default_value": "latest",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "required|string|max:20",
-            "field_type": "text"
-        },
-        {
-            "name": "ld lib path",
-            "description": "Dumb reasons to need this",
-            "env_variable": "LD_LIBRARY_PATH",
-            "default_value": ".",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": "required|string|max:20",
-            "field_type": "text"
-        },
-        {
-            "name": "Server Name",
-            "description": "The name for the server",
-            "env_variable": "SERVERNAME",
-            "default_value": "Bedrock Dedicated Server",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "required|string|max:50",
-            "field_type": "text"
-        },
-        {
-            "name": "Gamemode",
-            "description": "Allowed values: \"survival\", \"creative\", or \"adventure\"",
-            "env_variable": "GAMEMODE",
-            "default_value": "survival",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "required|string|in:survival,creative,adventure",
-            "field_type": "text"
-        },
-        {
-            "name": "Difficulty",
-            "description": "Allowed values: \"peaceful\", \"easy\", \"normal\", or \"hard\"",
-            "env_variable": "DIFFICULTY",
-            "default_value": "easy",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "required|string|in:peaceful,easy,normal,hard",
-            "field_type": "text"
-        },
-        {
-            "name": "Allow cheats",
-            "description": "If true then cheats like commands can be used.\r\n\r\nAllowed values: \"true\" or \"false\"",
-            "env_variable": "CHEATS",
-            "default_value": "false",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "required|string|in:true,false",
-            "field_type": "text"
-        }
-    ]
+    {
+      "default_value": "Bedrock Dedicated Server",
+      "description": "The name for the server",
+      "env_variable": "SERVERNAME",
+      "name": "Server Name",
+      "rules": [
+        "required",
+        "string",
+        "max:50"
+      ],
+      "sort": null,
+      "user_editable": true,
+      "user_viewable": true
+    },
+    {
+      "default_value": ".",
+      "description": "Dumb reasons to need this",
+      "env_variable": "LD_LIBRARY_PATH",
+      "name": "ld lib path",
+      "rules": [
+        "required",
+        "string",
+        "max:20"
+      ],
+      "sort": null,
+      "user_editable": false,
+      "user_viewable": false
+    }
+  ]
 }

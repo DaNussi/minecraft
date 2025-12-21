@@ -1,66 +1,82 @@
 {
-    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
-    "meta": {
-        "update_url": null,
-        "version": "PTDL_v2"
+  "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+  "author": "parker@parkervcp.com",
+  "config": {
+    "files": "{\n    \"settings.ini\": {\n        \"parser\": \"ini\",\n        \"find\": {\n            \"Server.Ports\": \"{{server.allocations.default.port}}\",\n            \"Server.Description\": \"{{server.environment.SERV_DESC}}\"\n        }\n    },\n    \"webadmin.ini\": {\n        \"parser\": \"ini\",\n        \"find\": {\n            \"User:admin.Password\": \"{{server.environment.ADMIN_PASS}}\",\n            \"WebAdmin.Ports\": \"{{server.environment.WEB_PORT}}\"\n        }\n    }\n}",
+    "logs": "{}",
+    "startup": "{\n    \"done\": \"Startup complete\"\n}",
+    "stop": "stop"
+  },
+  "description": "A lightweight, fast and extensible game server for Minecraft",
+  "docker_images": {
+    "ghcr.io/parkervcp/yolks:debian": "ghcr.io/parkervcp/yolks:debian"
+  },
+  "exported_at": "2025-12-20T03:30:52+00:00",
+  "features": [
+    "eula",
+    "java_version",
+    "pid_limit"
+  ],
+  "file_denylist": [],
+  "id": 747,
+  "image": null,
+  "meta": {
+    "update_url": null,
+    "version": "PLCN_v3"
+  },
+  "name": "Cuberite",
+  "scripts": {
+    "installation": {
+      "container": "ghcr.io/parkervcp/installers:debian",
+      "entrypoint": "bash",
+      "script": "#!/bin/ash\r\n# Cuberite\r\n#\r\n# Server Files: /mnt/server\r\n\r\ncd /mnt/server\r\n\r\nARCH=$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"x86_64\" || echo \"aarch64\")\r\n\r\nwget https://download.cuberite.org/linux-${ARCH}/Cuberite.tar.gz\r\n\r\ntar -xzf Cuberite.tar.gz\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
+    }
+  },
+  "startup_commands": {
+    "Default": "./Cuberite"
+  },
+  "tags": [],
+  "uuid": "78a9f1fb-d788-452f-bbce-8aefc8a37d03",
+  "variables": [
+    {
+      "default_value": "ChangeMe",
+      "description": "The password for the webadmin panel 'admin' user",
+      "env_variable": "ADMIN_PASS",
+      "name": "Admin Password",
+      "rules": [
+        "nullable",
+        "string"
+      ],
+      "sort": null,
+      "user_editable": true,
+      "user_viewable": true
     },
-    "exported_at": "2024-06-01T19:39:48+00:00",
-    "name": "Cuberite",
-    "author": "parker@parkervcp.com",
-    "description": "A lightweight, fast and extensible game server for Minecraft",
-    "features": [
-        "eula",
-        "java_version",
-        "pid_limit"
-    ],
-    "docker_images": {
-        "ghcr.io/parkervcp/yolks:debian": "ghcr.io/parkervcp/yolks:debian"
+    {
+      "default_value": "Cuberite on Pterodactyl!",
+      "description": "Server Description",
+      "env_variable": "SERV_DESC",
+      "name": "Server Description",
+      "rules": [
+        "nullable",
+        "string"
+      ],
+      "sort": null,
+      "user_editable": true,
+      "user_viewable": true
     },
-    "file_denylist": [],
-    "startup": "./Cuberite",
-    "config": {
-        "files": "{\r\n    \"settings.ini\": {\r\n        \"parser\": \"ini\",\r\n        \"find\": {\r\n            \"Server.Ports\": \"{{server.build.default.port}}\",\r\n            \"Server.Description\": \"{{server.build.env.SERV_DESC}}\"\r\n        }\r\n    },\r\n    \"webadmin.ini\": {\r\n        \"parser\": \"ini\",\r\n        \"find\": {\r\n            \"User:admin.Password\": \"{{server.build.env.ADMIN_PASS}}\",\r\n            \"WebAdmin.Ports\": \"{{server.build.env.WEB_PORT}}\"\r\n        }\r\n    }\r\n}",
-        "logs": "{}",
-        "startup": "{\r\n    \"done\": \"Startup complete\"\r\n}",
-        "stop": "stop"
-    },
-    "scripts": {
-        "installation": {
-            "container": "ghcr.io\/parkervcp\/installers:debian",
-            "entrypoint": "bash",
-            "script": "#!/bin/ash\r\n# Cuberite\r\n#\r\n# Server Files: /mnt/server\r\n\r\ncd /mnt/server\r\n\r\nARCH=$([[ \"$(uname -m)\" == \"x86_64\" ]] \u0026\u0026 echo \"x86_64\" || echo \"aarch64\")\r\n\r\nwget https://download.cuberite.org/linux-${ARCH}/Cuberite.tar.gz\r\n\r\ntar -xzf Cuberite.tar.gz\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\""
-        }
-    },
-    "variables": [
-        {
-            "name": "Server Description",
-            "description": "Server Description",
-            "env_variable": "SERV_DESC",
-            "default_value": "Cuberite on Pterodactyl!",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "nullable|string",
-            "field_type": "text"
-        },
-        {
-            "name": "Admin Password",
-            "description": "The password for the webadmin panel 'admin' user",
-            "env_variable": "ADMIN_PASS",
-            "default_value": "ChangeMe",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "nullable|string",
-            "field_type": "text"
-        },
-        {
-            "name": "WebAdmin Port",
-            "description": "Port for the cuberite webadmin panel.",
-            "env_variable": "WEB_PORT",
-            "default_value": "8080",
-            "user_viewable": true,
-            "user_editable": false,
-            "rules": "required|integer|between:1,65535",
-            "field_type": "text"
-        }
-    ]
+    {
+      "default_value": "8080",
+      "description": "Port for the cuberite webadmin panel.",
+      "env_variable": "WEB_PORT",
+      "name": "WebAdmin Port",
+      "rules": [
+        "required",
+        "integer",
+        "between:1,65535"
+      ],
+      "sort": null,
+      "user_editable": false,
+      "user_viewable": true
+    }
+  ]
 }
